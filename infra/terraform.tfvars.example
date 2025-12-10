@@ -1,0 +1,73 @@
+# ====================================
+# General Configuration
+# ====================================
+project_name = "gitea-infra"
+environment  = "demo"
+location     = "East US"
+
+tags = {
+  project     = "gitea-infra"
+  team        = "devops"
+  cost-center = "it-001"
+  managed-by  = "terraform"
+}
+
+# ====================================
+# Networking Configuration
+# ====================================
+vnet_address_space             = "10.1.0.0/16"
+subnet_app_address_prefix      = "10.1.2.0/24"
+subnet_database_address_prefix = "10.1.1.0/24"
+subnet_gateway_address_prefix  = "10.1.255.0/27"
+
+# Restrict SSH to your IP (replace with your actual IP)
+# Leave empty ("") to allow from anywhere (not recommended)
+admin_source_ip = ""
+
+# ====================================
+# VPN Gateway Configuration (AWS Connection)
+# ====================================
+# Set to true when ready to establish VPN with AWS
+enable_vpn_gateway = false
+
+# These will be set via Jenkins credentials or manually when enabling VPN
+# aws_vpn_gateway_ip = "AWS_VPN_GATEWAY_PUBLIC_IP"
+# aws_vpc_cidr       = "10.0.0.0/16"
+# vpn_shared_key     = "SECURE_SHARED_KEY"
+
+# ====================================
+# MySQL Database Configuration
+# ====================================
+mysql_admin_username = "gitea_admin"
+# mysql_admin_password will be set via Jenkins credentials or environment variable
+
+mysql_sku_name                = "B_Standard_B1ms"
+mysql_version                 = "8.0.21"
+mysql_storage_size_gb         = 20
+mysql_storage_iops            = 360
+mysql_backup_retention_days   = 7
+mysql_geo_redundant_backup    = false
+mysql_database_name           = "infraGiteaDB"
+mysql_allow_azure_services    = false
+
+# ====================================
+# MySQL Replication Configuration (AWS RDS)
+# ====================================
+# Set to true when AWS RDS is configured and ready
+enable_replication = false
+
+# These will be set via Jenkins credentials when enabling replication
+# aws_rds_endpoint       = "mydb.xxxx.us-east-1.rds.amazonaws.com"
+# replication_user       = "repl_azure"
+# replication_password   = "SECURE_PASSWORD"
+# master_log_file        = "mysql-bin-changelog.000003"
+# master_log_pos         = 157
+
+# ====================================
+# Compute (VM) Configuration
+# ====================================
+vm_size          = "Standard_B1s"
+vm_admin_username = "azureuser"
+
+# ssh_public_key will be set via Jenkins credentials or file
+# Example: ssh_public_key = file("~/.ssh/id_rsa.pub")
