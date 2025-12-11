@@ -71,7 +71,8 @@ This repository provisions a complete Azure infrastructure for hosting Gitea wit
 - ✅ **Database Replication**: MySQL master-replica setup for failover (with AWS)
 - ✅ **Team SSH Access**: Support for multiple allowed IP addresses
 - ✅ **Remote State**: Azure Storage backend for Terraform state
-- ✅ **CI/CD Ready**: Jenkins/Azure DevOps integration prepared
+- ✅ **CI/CD Ready**: Jenkins pipeline included for automated deployment
+- ✅ **Failover Mode**: Deploy only application infrastructure when database exists
 
 ## 🗂️ Project Structure
 
@@ -106,9 +107,14 @@ TF-AZ-INFRA-DEMOGITEA/
 │       ├── main.tf
 │       └── outputs.tf
 │
-└── ansible/                        # Ansible inventory template
-    ├── inventory.ini               # Static inventory with placeholders
-    └── playbook.yml                # Reference to ansible-az-demoGitea repo
+├── ansible/                        # Ansible inventory template
+│   ├── inventory.ini               # Static inventory with placeholders
+│   └── playbook.yml                # Reference to ansible-az-demoGitea repo
+│
+├── Jenkinsfile                     # CI/CD pipeline for automated deployment
+├── JENKINS_SETUP.md                # Jenkins configuration guide
+├── README.md                       # This file
+└── REPOSITORY_RELATIONSHIPS.md     # Multi-cloud architecture documentation
 
 ```
 
@@ -154,6 +160,32 @@ TF-AZ-INFRA-DEMOGITEA/
    ```
 
 ### Deployment Steps
+
+#### Option A: Manual Deployment (Terraform + Ansible)
+
+For detailed manual deployment steps, continue reading below.
+
+#### Option B: Automated Deployment (Jenkins Pipeline) ⭐ Recommended
+
+Use the included Jenkins pipeline for automated deployment:
+
+```bash
+# See JENKINS_SETUP.md for complete Jenkins configuration guide
+```
+
+**Jenkins Pipeline Features:**
+- ✅ Automated Terraform init/plan/apply
+- ✅ Auto-generated Ansible inventory from Terraform outputs
+- ✅ FAILOVER mode (deploy only app when DB exists)
+- ✅ FULL_STACK mode (deploy everything)
+- ✅ Discord notifications on success/failure
+- ✅ Built-in verification and health checks
+
+📚 **Full Guide**: [JENKINS_SETUP.md](./JENKINS_SETUP.md)
+
+---
+
+#### Manual Deployment Steps
 
 #### Step 1: Clone Repository
 
