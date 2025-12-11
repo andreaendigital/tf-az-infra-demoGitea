@@ -21,8 +21,10 @@ subnet_database_address_prefix = "10.1.1.0/24"
 subnet_gateway_address_prefix  = "10.1.255.0/27"
 
 # Restrict SSH to your IP (replace with your actual IP)
-# Leave empty ("") to allow from anywhere (not recommended)
-admin_source_ip = ""
+# Get your IP with: curl ifconfig.me
+# Leave empty ("") to allow from anywhere (NOT RECOMMENDED - INSECURE)
+# Example: admin_source_ip = "190.45.123.45"
+admin_source_ip = ""  # TODO: Set your public IP here for security
 
 # ====================================
 # VPN Gateway Configuration (AWS Connection)

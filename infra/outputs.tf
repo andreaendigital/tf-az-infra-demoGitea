@@ -56,6 +56,12 @@ output "mysql_server_fqdn" {
   sensitive   = true
 }
 
+output "mysql_server_host" {
+  description = "Hostname of the MySQL server (for Ansible mysql_host variable)"
+  value       = module.database.server_host
+  sensitive   = true
+}
+
 output "mysql_database_name" {
   description = "Name of the Gitea database"
   value       = module.database.database_name
@@ -64,6 +70,12 @@ output "mysql_database_name" {
 output "mysql_admin_username" {
   description = "MySQL administrator username"
   value       = module.database.admin_username
+  sensitive   = true
+}
+
+output "mysql_admin_password" {
+  description = "MySQL administrator password (from Jenkins credentials)"
+  value       = var.mysql_admin_password
   sensitive   = true
 }
 
