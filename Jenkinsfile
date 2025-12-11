@@ -12,13 +12,13 @@ pipeline {
     environment {
         // Ansible repository configuration
         ANSIBLE_DIR       = 'ansible-az-demoGitea'
-        ANSIBLE_BRANCH    = 'DEMO-22-write-ansible-azure-repo'
+        ANSIBLE_BRANCH    = 'main'
         INVENTORY_FILE    = "${ANSIBLE_DIR}/inventory.ini"
         PLAYBOOK_FILE     = "${ANSIBLE_DIR}/playbook.yml"
         
         // Terraform configuration
         TF_DIR            = 'infra'
-        TF_BRANCH         = 'DEMO-23-write-terraform-azure-infra-repo'
+        TF_BRANCH         = 'main'
         
         // Notification
         DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1437993582756888648/wG9NzvbVm2zkXK6BYNItaS38CcpGo5tZrV8idq5Gk3aKQReQOyMa44mavFY23oqQJFyj"
