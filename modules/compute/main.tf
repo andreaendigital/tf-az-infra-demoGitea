@@ -1,3 +1,18 @@
+# Public IP for VM (Static allocation for stable SSH access)
+resource "azurerm_public_ip" "vm" {
+  name                = "pip-vm-${var.project_name}-${var.environment}"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+
+  tags = merge(var.tags, {
+    environment = var.environment
+    module      = "compute"
+    purpose     = "ssh-access"
+  })
+}
+
 # Network Interface
 resource "azurerm_network_interface" "main" {
   name                = "nic-${var.project_name}-${var.environment}"
@@ -8,6 +23,7 @@ resource "azurerm_network_interface" "main" {
     name                          = "internal"
     subnet_id                     = var.subnet_id
     private_ip_address_allocation = "Dynamic"
+    public_ip_address_id          = azurerm_public_ip.vm.id
   }
 
   tags = merge(var.tags, {

@@ -90,14 +90,24 @@ output "vm_id" {
   value       = module.compute.vm_id
 }
 
+output "vm_name" {
+  description = "Name of the virtual machine"
+  value       = module.compute.vm_name
+}
+
 output "vm_private_ip" {
   description = "Private IP address of the VM"
   value       = module.compute.vm_private_ip
 }
 
+output "vm_public_ip" {
+  description = "Public IP address of the VM (for SSH/Ansible access)"
+  value       = module.compute.vm_public_ip
+}
+
 output "ssh_connection_string" {
-  description = "SSH command to connect to the VM (via Load Balancer)"
-  value       = "ssh ${var.vm_admin_username}@${module.load_balancer.public_ip_address}"
+  description = "SSH command to connect directly to the VM"
+  value       = "ssh ${var.vm_admin_username}@${module.compute.vm_public_ip}"
 }
 
 # ====================================
