@@ -2,7 +2,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "=3.0.0"
+      version = "~> 3.103.0"
     }
   }
 }
@@ -15,7 +15,7 @@ provider "azurerm" {
 resource "azurerm_resource_group" "demo" {
   name     = "rg-demo-cicd"
   location = "East US"
-  
+
   tags = {
     environment = "demo"
     project     = "ci-cd-pipeline"
@@ -37,7 +37,7 @@ resource "azurerm_network_security_group" "demo" {
     protocol                   = "Tcp"
     source_port_range          = "*"
     destination_port_range     = "22"
-    source_address_prefix      = "*"
+    source_address_prefix      = "181.160.67.124/32"
     destination_address_prefix = "*"
   }
 
@@ -49,7 +49,7 @@ resource "azurerm_network_security_group" "demo" {
     protocol                   = "Tcp"
     source_port_range          = "*"
     destination_port_range     = "80"
-    source_address_prefix      = "*"
+    source_address_prefix      = "181.160.67.124/32"
     destination_address_prefix = "*"
   }
 
@@ -61,7 +61,7 @@ resource "azurerm_network_security_group" "demo" {
     protocol                   = "Tcp"
     source_port_range          = "*"
     destination_port_range     = "8080"
-    source_address_prefix      = "*"
+    source_address_prefix      = "181.160.67.124/32"
     destination_address_prefix = "*"
   }
 
