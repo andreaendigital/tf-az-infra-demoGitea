@@ -1,0 +1,20 @@
+---
+- name: Deploy and Configure Gitea on Azure VM
+  hosts: gitea
+  become: yes
+  gather_facts: yes
+
+  vars_files:
+    - vars/main.yml
+
+  roles:
+    - gitea
+
+  post_tasks:
+    - name: Display Gitea access information
+      debug:
+        msg:
+          - "Gitea installation completed successfully!"
+          - "Access Gitea at: http://{{ ansible_host }}:3000"
+          - "Database: {{ mysql_host }}"
+          - "SSH clone: git@{{ ansible_host }}:username/repo.git"
