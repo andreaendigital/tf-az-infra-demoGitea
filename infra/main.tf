@@ -21,7 +21,8 @@ module "networking" {
   subnet_app_address_prefix       = var.subnet_app_address_prefix
   subnet_database_address_prefix  = var.subnet_database_address_prefix
   subnet_gateway_address_prefix   = var.subnet_gateway_address_prefix
-  admin_source_ip                 = var.admin_source_ip
+  allowed_ssh_ips                 = var.allowed_ssh_ips
+  admin_source_ip                 = var.admin_source_ip  # Deprecated, for backwards compatibility
 
   enable_vpn_gateway   = var.enable_vpn_gateway
   aws_vpn_gateway_ip   = var.aws_vpn_gateway_ip

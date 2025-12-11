@@ -20,11 +20,17 @@ subnet_app_address_prefix      = "10.1.2.0/24"
 subnet_database_address_prefix = "10.1.1.0/24"
 subnet_gateway_address_prefix  = "10.1.255.0/27"
 
-# Restrict SSH to your IP (replace with your actual IP)
+# SSH Access Control - Multiple team members supported
 # Get your IP with: curl ifconfig.me
-# Leave empty ("") to allow from anywhere (NOT RECOMMENDED - INSECURE)
-# Example: admin_source_ip = "190.45.123.45"
-admin_source_ip = ""  # TODO: Set your public IP here for security
+# Format: "YOUR_IP/32" for single IP, or list multiple IPs for team access
+# Examples:
+#   allowed_ssh_ips = ["190.45.123.45/32"]  # Single IP (you)
+#   allowed_ssh_ips = ["190.45.123.45/32", "203.0.113.4/32", "198.51.100.10/32"]  # Team (you + 2 colleagues)
+#   allowed_ssh_ips = ["0.0.0.0/0"]  # NOT RECOMMENDED - Open to Internet (INSECURE)
+allowed_ssh_ips = []  # TODO: Add your IP here for security
+
+# DEPRECATED: Use allowed_ssh_ips instead (maintained for backwards compatibility)
+# admin_source_ip = ""
 
 # ====================================
 # VPN Gateway Configuration (AWS Connection)

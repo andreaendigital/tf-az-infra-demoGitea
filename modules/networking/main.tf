@@ -52,17 +52,21 @@ resource "azurerm_network_security_group" "app" {
   location            = var.location
   resource_group_name = var.resource_group_name
 
-  # SSH access (restricted to specific IP if provided)
-  security_rule {
-    name                       = "AllowSSH"
-    priority                   = 1001
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "22"
-    source_address_prefix      = var.admin_source_ip != "" ? var.admin_source_ip : "*"
-    destination_address_prefix = "*"
+  # SSH access (restricted to specific IPs if provided)
+  # Supports multiple team members by allowing a list of IPs
+  dynamic "security_rule" {
+    for_each = length(var.allowed_ssh_ips) > 0 ? var.allowed_ssh_ips : (var.admin_source_ip != "" ? [var.admin_source_ip] : ["*"])
+    content {
+      name                       = "AllowSSH-${security_rule.key}"
+      priority                   = 1001 + security_rule.key
+      direction                  = "Inbound"
+      access                     = "Allow"
+      protocol                   = "Tcp"
+      source_port_range          = "*"
+      destination_port_range     = "22"
+      source_address_prefix      = security_rule.value
+      destination_address_prefix = "*"
+    }
   }
 
   # HTTP for Gitea web interface
