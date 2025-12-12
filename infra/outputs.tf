@@ -49,35 +49,7 @@ output "vpn_gateway_public_ip" {
 # ====================================
 # Database Outputs
 # ====================================
-
-output "mysql_server_fqdn" {
-  description = "Fully qualified domain name of the MySQL server"
-  value       = azurerm_mysql_flexible_server.main.fqdn
-  sensitive   = true
-}
-
-output "mysql_server_host" {
-  description = "Hostname of the MySQL server (for Ansible mysql_host variable)"
-  value       = azurerm_mysql_flexible_server.main.fqdn
-  sensitive   = true
-}
-
-output "mysql_database_name" {
-  description = "Name of the Gitea database"
-  value       = azurerm_mysql_flexible_database.gitea.name
-}
-
-output "mysql_admin_username" {
-  description = "MySQL administrator username"
-  value       = azurerm_mysql_flexible_server.main.administrator_login
-  sensitive   = true
-}
-
-output "mysql_admin_password" {
-  description = "MySQL administrator password (from Jenkins credentials)"
-  value       = var.mysql_admin_password
-  sensitive   = true
-}
+/* MySQL Flexible Server outputs removed. MySQL will be provided by a VM; new outputs will be added after VM creation. */
 
 # ====================================
 # Load Balancer Outputs
@@ -130,11 +102,8 @@ output "ansible_inventory" {
   description = "Ansible inventory information"
   value = {
     vm_private_ip = azurerm_network_interface.main.private_ip_address
-    vm_public_ip  = azurerm_public_ip.lb.ip_address
+    vm_public_ip  = azurerm_public_ip.vm.ip_address
     ssh_user      = var.vm_admin_username
-    mysql_host    = azurerm_mysql_flexible_server.main.fqdn
-    mysql_db      = azurerm_mysql_flexible_database.gitea.name
-    mysql_user    = azurerm_mysql_flexible_server.main.administrator_login
   }
   sensitive = true
 }
