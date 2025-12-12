@@ -98,6 +98,39 @@ pipeline {
             }
         }
 
+        stage('Setup Backend Storage') {
+            steps {
+                echo '💾 Setting up Azure Storage for Terraform backend...'
+                withCredentials([
+                    azureServicePrincipal(
+                        credentialsId: 'azure-service-principal',
+                        subscriptionIdVariable: 'ARM_SUBSCRIPTION_ID',
+                        clientIdVariable: 'ARM_CLIENT_ID',
+                        clientSecretVariable: 'ARM_CLIENT_SECRET',
+                        tenantIdVariable: 'ARM_TENANT_ID'
+                    )
+                ]) {
+                    dir("${TF_DIR}") {
+                        sh '''
+                            # Login to Azure using Service Principal
+                            az login --service-principal \
+                              --username $ARM_CLIENT_ID \
+                              --password $ARM_CLIENT_SECRET \
+                              --tenant $ARM_TENANT_ID
+                            
+                            # Set subscription
+                            az account set --subscription $ARM_SUBSCRIPTION_ID
+                            
+                            # Run setup script
+                            chmod +x setup-backend.sh
+                            ./setup-backend.sh
+                        '''
+                    }
+                }
+                echo '✅ Backend storage configured'
+            }
+        }
+
         stage('Terraform Init') {
             steps {
                 echo '⚙️  Initializing Terraform...'
