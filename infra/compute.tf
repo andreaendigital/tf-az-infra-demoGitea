@@ -87,8 +87,6 @@ resource "azurerm_linux_virtual_machine" "main" {
 
   disable_password_authentication = true
 
-  custom_data = filebase64("${path.module}/modules/compute/cloud-init.yaml")
-
   tags = merge(var.tags, {
     environment = var.environment
     component   = "compute"

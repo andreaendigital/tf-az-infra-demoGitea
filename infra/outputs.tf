@@ -85,12 +85,12 @@ output "mysql_admin_password" {
 
 output "load_balancer_public_ip" {
   description = "Public IP address of the load balancer"
-  value       = azurerm_public_ip.lb_public_ip.ip_address
+  value       = azurerm_public_ip.lb.ip_address
 }
 
 output "gitea_url" {
   description = "URL to access Gitea application"
-  value       = "http://${azurerm_public_ip.lb_public_ip.ip_address}"
+  value       = "http://${azurerm_public_ip.lb.ip_address}"
 }
 
 # ====================================
@@ -114,12 +114,12 @@ output "vm_private_ip" {
 
 output "vm_public_ip" {
   description = "Public IP address of the VM (for SSH/Ansible access)"
-  value       = azurerm_public_ip.vm_public_ip.ip_address
+  value       = azurerm_public_ip.vm.ip_address
 }
 
 output "ssh_connection_string" {
   description = "SSH command to connect directly to the VM"
-  value       = "ssh ${var.vm_admin_username}@${azurerm_public_ip.vm_public_ip.ip_address}"
+  value       = "ssh ${var.vm_admin_username}@${azurerm_public_ip.vm.ip_address}"
 }
 
 # ====================================
@@ -130,7 +130,7 @@ output "ansible_inventory" {
   description = "Ansible inventory information"
   value = {
     vm_private_ip = azurerm_network_interface.main.private_ip_address
-    vm_public_ip  = azurerm_public_ip.lb_public_ip.ip_address
+    vm_public_ip  = azurerm_public_ip.lb.ip_address
     ssh_user      = var.vm_admin_username
     mysql_host    = azurerm_mysql_flexible_server.main.fqdn
     mysql_db      = azurerm_mysql_flexible_database.gitea.name
