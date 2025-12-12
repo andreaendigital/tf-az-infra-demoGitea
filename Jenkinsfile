@@ -91,7 +91,7 @@ pipeline {
                 ]) {
                     sh '''
                         echo "Azure credentials loaded"
-                        echo "Subscription ID: ${ARM_SUBSCRIPTION_ID:0:8}..."
+                        echo "Subscription ID: $(echo $ARM_SUBSCRIPTION_ID | cut -c1-8)..."
                     '''
                 }
                 echo '✅ Azure credentials verified'
