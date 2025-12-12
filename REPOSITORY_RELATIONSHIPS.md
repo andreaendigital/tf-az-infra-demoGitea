@@ -4,12 +4,12 @@ This document explains how the four Gitea repositories work together to create a
 
 ## 📊 Repository Overview
 
-| Repository | Cloud | Type | Purpose |
-|------------|-------|------|---------|
-| **tf-infra-demoGitea** | AWS | Terraform IaC | Provisions AWS infrastructure (Primary) |
-| **ansible-demoGitea** | AWS | Ansible Config | Deploys/configures Gitea on AWS EC2 |
-| **tf-az-infra-demoGitea** | Azure | Terraform IaC | Provisions Azure infrastructure (Failover) |
-| **ansible-az-demoGitea** | Azure | Ansible Config | Deploys/configures Gitea on Azure VM |
+| Repository                | Cloud | Type           | Purpose                                    |
+| ------------------------- | ----- | -------------- | ------------------------------------------ |
+| **tf-infra-demoGitea**    | AWS   | Terraform IaC  | Provisions AWS infrastructure (Primary)    |
+| **ansible-demoGitea**     | AWS   | Ansible Config | Deploys/configures Gitea on AWS EC2        |
+| **tf-az-infra-demoGitea** | Azure | Terraform IaC  | Provisions Azure infrastructure (Failover) |
+| **ansible-az-demoGitea**  | Azure | Ansible Config | Deploys/configures Gitea on Azure VM       |
 
 ## 🏗️ Complete Architecture Diagram
 
@@ -114,6 +114,7 @@ This document explains how the four Gitea repositories work together to create a
 **Relationship Type:** Infrastructure → Configuration
 
 **Flow:**
+
 ```
 terraform apply (AWS)
     ├─ Creates EC2 instance
@@ -126,12 +127,14 @@ terraform apply (AWS)
 ```
 
 **Key Integration Points:**
+
 - Terraform outputs → Ansible variables
 - EC2 public IP → `ansible_host`
 - RDS endpoint → `mysql_host`
 - Security group → Ansible SSH access
 
 **Files involved:**
+
 ```
 TF-INFRA-DEMOGITEA/infra/outputs.tf
     ↓ (via Jenkinsfile or manual script)
@@ -149,6 +152,7 @@ ANSIBLE-DEMOGITEA/playbook.yml
 **Relationship Type:** Infrastructure → Configuration
 
 **Flow:**
+
 ```
 terraform apply (Azure)
     ├─ Creates VM with static public IP
@@ -160,12 +164,14 @@ terraform apply (Azure)
 ```
 
 **Key Integration Points:**
+
 - Terraform outputs → Manual inventory configuration
 - VM public IP (static) → `ansible_host`
 - MySQL FQDN → `mysql_host`
 - NSG rules → Ansible SSH access
 
 **Files involved:**
+
 ```
 TF-AZ-INFRA-DEMOGITEA/infra/outputs.tf
     ↓ (manual copy of values)
@@ -183,6 +189,7 @@ ANSIBLE-AZ-DEMOGITEA/playbook.yml
 **Relationship Type:** Bidirectional Infrastructure (VPN + Replication)
 
 **Flow:**
+
 ```
 Phase 1: Deploy Azure first
     terraform apply (Azure)
@@ -192,7 +199,7 @@ Phase 2: Configure AWS with Azure VPN IP
     Update AWS terraform.tfvars:
         enable_vpn_gateway = true
         azure_vpn_gateway_ip = "20.123.45.67"
-        
+
     terraform apply (AWS)
         ├─ Creates VPN Gateway
         ├─ Creates Customer Gateway (Azure IP)
@@ -204,7 +211,7 @@ Phase 3: Update Azure with AWS VPN tunnel IP
     Update Azure terraform.tfvars:
         enable_vpn_gateway = true
         aws_vpn_gateway_ip = "54.123.45.67"
-        
+
     terraform apply (Azure)
         └─ Establishes VPN tunnel
 
@@ -215,6 +222,7 @@ Phase 4: Configure MySQL Replication
 ```
 
 **Shared Variables:**
+
 ```hcl
 # Both sides need matching values
 vpn_shared_key     = "SameSecureKey123!"
@@ -229,6 +237,7 @@ azure_vnet_cidr    = "10.1.0.0/16"  # Azure → AWS
 **Relationship Type:** Parallel Configuration (Same purpose, different clouds)
 
 **Similarities:**
+
 - Both install Gitea from binary
 - Both configure MySQL connection
 - Both set up systemd service
@@ -236,13 +245,13 @@ azure_vnet_cidr    = "10.1.0.0/16"  # Azure → AWS
 
 **Differences:**
 
-| Aspect | AWS (ansible-demoGitea) | Azure (ansible-az-demoGitea) |
-|--------|-------------------------|------------------------------|
-| **Inventory Host** | `infraGitea` | `azureGitea` |
-| **Inventory Type** | Dynamic (generated) | Static (manual) |
-| **VM User** | `ec2-user` (Amazon Linux) | `azureuser` (Ubuntu) |
-| **MySQL Host** | RDS endpoint | MySQL Flexible FQDN |
-| **SSH Key** | `~/.ssh/aws-gitea-key.pem` | `~/.ssh/azure-gitea-key.pem` |
+| Aspect             | AWS (ansible-demoGitea)    | Azure (ansible-az-demoGitea) |
+| ------------------ | -------------------------- | ---------------------------- |
+| **Inventory Host** | `infraGitea`               | `azureGitea`                 |
+| **Inventory Type** | Dynamic (generated)        | Static (manual)              |
+| **VM User**        | `ec2-user` (Amazon Linux)  | `azureuser` (Ubuntu)         |
+| **MySQL Host**     | RDS endpoint               | MySQL Flexible FQDN          |
+| **SSH Key**        | `~/.ssh/aws-gitea-key.pem` | `~/.ssh/azure-gitea-key.pem` |
 
 ---
 
@@ -331,6 +340,7 @@ curl http://<AZURE_LB_IP>:3000
 ```
 
 **Automatic Failover (Future Enhancement):**
+
 - Health checks monitor AWS Gitea
 - Automation script detects failure
 - Script executes failover steps
@@ -375,32 +385,34 @@ User → Azure LB → Azure VM Gitea → Azure MySQL (Promoted to Master)
 
 ### AWS Terraform → AWS Ansible
 
-| Terraform Output | Ansible Variable | Usage |
-|------------------|------------------|-------|
-| `ec2_public_ip` | `ansible_host` | SSH connection |
-| `rds_endpoint` | `mysql_host` | Database connection |
-| `mysql_dbname` | `mysql_dbname` | Database name |
-| `mysql_username` | `mysql_username` | DB user |
+| Terraform Output | Ansible Variable | Usage               |
+| ---------------- | ---------------- | ------------------- |
+| `ec2_public_ip`  | `ansible_host`   | SSH connection      |
+| `rds_endpoint`   | `mysql_host`     | Database connection |
+| `mysql_dbname`   | `mysql_dbname`   | Database name       |
+| `mysql_username` | `mysql_username` | DB user             |
 
 ### Azure Terraform → Azure Ansible
 
-| Terraform Output | Ansible Variable | Usage |
-|------------------|------------------|-------|
-| `vm_public_ip` | `ansible_host` | SSH connection |
-| `mysql_server_host` | `mysql_host` | Database connection |
-| `mysql_database_name` | `mysql_dbname` | Database name |
-| `mysql_admin_username` | `mysql_username` | DB user |
+| Terraform Output       | Ansible Variable | Usage               |
+| ---------------------- | ---------------- | ------------------- |
+| `vm_public_ip`         | `ansible_host`   | SSH connection      |
+| `mysql_server_host`    | `mysql_host`     | Database connection |
+| `mysql_database_name`  | `mysql_dbname`   | Database name       |
+| `mysql_admin_username` | `mysql_username` | DB user             |
 
 ## 🎯 Key Design Decisions
 
 ### Why Different Inventory Methods?
 
 **AWS: Dynamic Inventory**
+
 - Terraform outputs change frequently during development
 - Jenkins pipeline automates the process
 - `generate_inventory.sh` script bridges Terraform → Ansible
 
 **Azure: Static Inventory**
+
 - VM has static public IP (doesn't change)
 - Simpler for manual failover deployment
 - One-time configuration after Terraform apply
@@ -453,4 +465,5 @@ All repositories: MIT License
 ## 👤 Author
 
 **Andrea Beltrán**
+
 - GitHub: [@andreaendigital](https://github.com/andreaendigital)

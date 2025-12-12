@@ -122,33 +122,36 @@ TF-AZ-INFRA-DEMOGITEA/
 
 ### Prerequisites
 
-| Tool | Version | Purpose |
-|------|---------|---------|
-| **Terraform** | >= 1.0 | Infrastructure provisioning |
-| **Azure CLI** | >= 2.40 | Azure authentication |
-| **SSH Key** | RSA 2048+ | VM access |
-| **Ansible** | >= 2.9 | Configuration management (separate repo) |
+| Tool          | Version   | Purpose                                  |
+| ------------- | --------- | ---------------------------------------- |
+| **Terraform** | >= 1.0    | Infrastructure provisioning              |
+| **Azure CLI** | >= 2.40   | Azure authentication                     |
+| **SSH Key**   | RSA 2048+ | VM access                                |
+| **Ansible**   | >= 2.9    | Configuration management (separate repo) |
 
 ### Azure Setup
 
 1. **Install Azure CLI** (if not already installed):
+
    ```bash
    # macOS
    brew install azure-cli
-   
+
    # Ubuntu/Debian
    curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-   
+
    # Windows
    # Download from: https://aka.ms/installazurecliwindows
    ```
 
 2. **Login to Azure**:
+
    ```bash
    az login
    ```
 
 3. **Set subscription** (if you have multiple):
+
    ```bash
    az account list --output table
    az account set --subscription "YOUR_SUBSCRIPTION_ID"
@@ -174,6 +177,7 @@ Use the included Jenkins pipeline for automated deployment:
 ```
 
 **Jenkins Pipeline Features:**
+
 - ✅ Automated Terraform init/plan/apply
 - ✅ Auto-generated Ansible inventory from Terraform outputs
 - ✅ FAILOVER mode (deploy only app when DB exists)
@@ -290,51 +294,51 @@ See [ansible-az-demoGitea](https://github.com/andreaendigital/ansible-az-demoGit
 
 ### Core Variables
 
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `project_name` | Project identifier | `gitea-infra` | ✅ |
-| `environment` | Environment name | `demo` | ✅ |
-| `location` | Azure region | `East US` | ✅ |
-| `allowed_ssh_ips` | IPs allowed to SSH | `[]` | ✅ |
-| `mysql_admin_password` | MySQL admin password | - | ✅ |
-| `ssh_public_key` | SSH public key for VM | - | ✅ |
+| Variable               | Description           | Default       | Required |
+| ---------------------- | --------------------- | ------------- | -------- |
+| `project_name`         | Project identifier    | `gitea-infra` | ✅       |
+| `environment`          | Environment name      | `demo`        | ✅       |
+| `location`             | Azure region          | `East US`     | ✅       |
+| `allowed_ssh_ips`      | IPs allowed to SSH    | `[]`          | ✅       |
+| `mysql_admin_password` | MySQL admin password  | -             | ✅       |
+| `ssh_public_key`       | SSH public key for VM | -             | ✅       |
 
 ### Networking Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `vnet_address_space` | VNet CIDR block | `10.1.0.0/16` |
-| `subnet_app_address_prefix` | Application subnet | `10.1.2.0/24` |
-| `subnet_database_address_prefix` | Database subnet | `10.1.1.0/24` |
-| `subnet_gateway_address_prefix` | VPN Gateway subnet | `10.1.255.0/27` |
+| Variable                         | Description        | Default         |
+| -------------------------------- | ------------------ | --------------- |
+| `vnet_address_space`             | VNet CIDR block    | `10.1.0.0/16`   |
+| `subnet_app_address_prefix`      | Application subnet | `10.1.2.0/24`   |
+| `subnet_database_address_prefix` | Database subnet    | `10.1.1.0/24`   |
+| `subnet_gateway_address_prefix`  | VPN Gateway subnet | `10.1.255.0/27` |
 
 ### VM Configuration
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `vm_size` | Azure VM size | `Standard_B2s` |
-| `vm_admin_username` | VM admin username | `azureuser` |
+| Variable            | Description       | Default        |
+| ------------------- | ----------------- | -------------- |
+| `vm_size`           | Azure VM size     | `Standard_B2s` |
+| `vm_admin_username` | VM admin username | `azureuser`    |
 
 ### Database Configuration
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `mysql_admin_username` | MySQL admin user | `gitea_admin` |
-| `mysql_sku_name` | MySQL tier | `B_Standard_B1ms` |
-| `mysql_version` | MySQL version | `8.0.21` |
-| `mysql_storage_size_gb` | Storage size | `20` |
-| `mysql_backup_retention_days` | Backup retention | `7` |
+| Variable                      | Description      | Default           |
+| ----------------------------- | ---------------- | ----------------- |
+| `mysql_admin_username`        | MySQL admin user | `gitea_admin`     |
+| `mysql_sku_name`              | MySQL tier       | `B_Standard_B1ms` |
+| `mysql_version`               | MySQL version    | `8.0.21`          |
+| `mysql_storage_size_gb`       | Storage size     | `20`              |
+| `mysql_backup_retention_days` | Backup retention | `7`               |
 
 ### VPN Gateway (Optional)
 
 For AWS connectivity and database replication:
 
-| Variable | Description | Required for VPN |
-|----------|-------------|------------------|
-| `enable_vpn_gateway` | Enable VPN Gateway | ✅ |
-| `aws_vpn_gateway_ip` | AWS VPN public IP | ✅ |
-| `aws_vpc_cidr` | AWS VPC CIDR | ✅ |
-| `vpn_shared_key` | IPsec shared key | ✅ |
+| Variable             | Description        | Required for VPN |
+| -------------------- | ------------------ | ---------------- |
+| `enable_vpn_gateway` | Enable VPN Gateway | ✅               |
+| `aws_vpn_gateway_ip` | AWS VPN public IP  | ✅               |
+| `aws_vpc_cidr`       | AWS VPC CIDR       | ✅               |
+| `vpn_shared_key`     | IPsec shared key   | ✅               |
 
 **Enable VPN in terraform.tfvars:**
 
@@ -466,6 +470,7 @@ terraform destroy
 ```
 
 **⚠️ Warning:** This will permanently delete:
+
 - Virtual Machines
 - Databases (and all data)
 - Load Balancers
@@ -476,11 +481,11 @@ Backups are retained according to your backup retention policy (default: 7 days)
 
 ## 🔗 Related Repositories
 
-| Repository | Purpose | Link |
-|------------|---------|------|
+| Repository               | Purpose                              | Link                                                              |
+| ------------------------ | ------------------------------------ | ----------------------------------------------------------------- |
 | **ansible-az-demoGitea** | Ansible playbooks for Gitea on Azure | [GitHub](https://github.com/andreaendigital/ansible-az-demoGitea) |
-| **tf-infra-demoGitea** | Terraform for AWS infrastructure | [GitHub](https://github.com/andreaendigital/tf-infra-demoGitea) |
-| **ansible-demoGitea** | Ansible playbooks for Gitea on AWS | [GitHub](https://github.com/andreaendigital/ansible-demoGitea) |
+| **tf-infra-demoGitea**   | Terraform for AWS infrastructure     | [GitHub](https://github.com/andreaendigital/tf-infra-demoGitea)   |
+| **ansible-demoGitea**    | Ansible playbooks for Gitea on AWS   | [GitHub](https://github.com/andreaendigital/ansible-demoGitea)    |
 
 See [REPOSITORY_RELATIONSHIPS.md](./REPOSITORY_RELATIONSHIPS.md) for complete architecture overview.
 
@@ -488,18 +493,19 @@ See [REPOSITORY_RELATIONSHIPS.md](./REPOSITORY_RELATIONSHIPS.md) for complete ar
 
 Approximate monthly costs (Pay-as-you-go, East US):
 
-| Resource | SKU | Estimated Cost |
-|----------|-----|----------------|
-| VM | Standard_B2s | $30-40/month |
-| MySQL Flexible Server | B_Standard_B1ms | $15-25/month |
-| Load Balancer | Basic | $18/month |
-| Public IPs | 2 static IPs | $8/month |
-| VPN Gateway | VpnGw1 (optional) | $140/month |
-| Storage/Bandwidth | Varies | $5-10/month |
-| **Total (without VPN)** | | **~$75-100/month** |
-| **Total (with VPN)** | | **~$215-250/month** |
+| Resource                | SKU               | Estimated Cost      |
+| ----------------------- | ----------------- | ------------------- |
+| VM                      | Standard_B2s      | $30-40/month        |
+| MySQL Flexible Server   | B_Standard_B1ms   | $15-25/month        |
+| Load Balancer           | Basic             | $18/month           |
+| Public IPs              | 2 static IPs      | $8/month            |
+| VPN Gateway             | VpnGw1 (optional) | $140/month          |
+| Storage/Bandwidth       | Varies            | $5-10/month         |
+| **Total (without VPN)** |                   | **~$75-100/month**  |
+| **Total (with VPN)**    |                   | **~$215-250/month** |
 
 💡 **Cost optimization tips:**
+
 - Use B-series burstable VMs for dev/test
 - Enable auto-shutdown for non-production VMs
 - Use spot instances where applicable
@@ -510,6 +516,7 @@ Approximate monthly costs (Pay-as-you-go, East US):
 ### Issue: SSH connection refused
 
 **Solution:**
+
 ```bash
 # Verify your IP is allowed
 curl ifconfig.me
@@ -521,6 +528,7 @@ terraform apply
 ### Issue: MySQL connection error from VM
 
 **Solution:**
+
 ```bash
 # Check NSG rules allow VM → MySQL
 terraform output | grep mysql
@@ -532,6 +540,7 @@ az network private-dns zone list -o table
 ### Issue: VPN tunnel not connecting
 
 **Solution:**
+
 ```bash
 # Verify shared key matches on both sides
 # Check BGP settings
@@ -543,6 +552,7 @@ az network vnet-gateway list -o table
 ### Issue: Terraform state locked
 
 **Solution:**
+
 ```bash
 # Force unlock (use with caution!)
 terraform force-unlock LOCK_ID
@@ -570,6 +580,7 @@ This project is licensed under the MIT License.
 ## 👤 Author
 
 **Andrea Beltrán**
+
 - GitHub: [@andreaendigital](https://github.com/andreaendigital)
 
 ## 🙏 Acknowledgments
