@@ -1,14 +1,18 @@
+# ====================================
+# Load Balancer
+# ====================================
+
 # Public IP for Load Balancer
-resource "azurerm_public_ip" "main" {
+resource "azurerm_public_ip" "lb" {
   name                = "pip-lb-${var.project_name}-${var.environment}"
   location            = var.location
-  resource_group_name = var.resource_group_name
+  resource_group_name = azurerm_resource_group.main.name
   allocation_method   = "Static"
   sku                 = "Standard"
 
   tags = merge(var.tags, {
     environment = var.environment
-    module      = "load-balancer"
+    component   = "load-balancer"
   })
 }
 
@@ -16,17 +20,17 @@ resource "azurerm_public_ip" "main" {
 resource "azurerm_lb" "main" {
   name                = "lb-${var.project_name}-${var.environment}"
   location            = var.location
-  resource_group_name = var.resource_group_name
+  resource_group_name = azurerm_resource_group.main.name
   sku                 = "Standard"
 
   frontend_ip_configuration {
     name                 = "PublicIPAddress"
-    public_ip_address_id = azurerm_public_ip.main.id
+    public_ip_address_id = azurerm_public_ip.lb.id
   }
 
   tags = merge(var.tags, {
     environment = var.environment
-    module      = "load-balancer"
+    component   = "load-balancer"
   })
 }
 

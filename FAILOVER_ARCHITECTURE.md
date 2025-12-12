@@ -24,6 +24,7 @@
 ```
 
 **Why this approach?**
+
 - ✅ **Cost Savings**: Only pay for database in Azure (~$25/month vs ~$100/month full stack)
 - ✅ **Data Ready**: Database always has latest data from AWS
 - ✅ **Fast Failover**: Deploy app infra in ~15-20 minutes when needed
@@ -88,6 +89,7 @@
 ## 🚀 How to Execute Failover
 
 ### Step 1: Detect AWS Failure
+
 ```bash
 # Monitoring should alert you
 # Or manual check:
@@ -112,6 +114,7 @@ Click: [Build]
 ```
 
 **What Jenkins does:**
+
 1. ✅ Clones Terraform and Ansible repos
 2. ✅ Runs `terraform apply` → Creates VM + Load Balancer
 3. ✅ Extracts outputs (VM IP, MySQL host)
@@ -180,6 +183,7 @@ DEPLOYMENT_MODE: FAILOVER
 ```
 
 **What it deploys:**
+
 - ✅ Virtual Machine
 - ✅ Load Balancer
 - ✅ Network Interface
@@ -202,6 +206,7 @@ DEPLOYMENT_MODE: FULL_STACK
 ```
 
 **What it deploys:**
+
 - ✅ Resource Group
 - ✅ Virtual Network + Subnets
 - ✅ MySQL Flexible Server
@@ -245,6 +250,7 @@ Azure MySQL (Replica)
 **Replication Lag**: < 1 second under normal conditions
 
 **What gets replicated:**
+
 - ✅ All Git repositories
 - ✅ All user accounts
 - ✅ All pull requests
@@ -261,6 +267,7 @@ Azure MySQL (Replica)
 ### Option A: Keep Azure as Primary
 
 **Steps:**
+
 1. ✅ Azure is already running
 2. ✅ Users are already using it
 3. ❌ Leave AWS infrastructure stopped
@@ -273,6 +280,7 @@ Azure MySQL (Replica)
 ### Option B: Return to AWS as Primary
 
 **Steps:**
+
 1. 🔄 Reverse replication direction (Azure → AWS)
 2. ⏳ Wait for AWS RDS to catch up
 3. 🔁 Switch DNS back to AWS
@@ -286,6 +294,7 @@ Azure MySQL (Replica)
 ### Option C: Keep Both Active (Advanced)
 
 **Steps:**
+
 1. ✅ Keep both AWS and Azure running
 2. 🔄 Use DNS-based load balancing
 3. 🌍 Geo-distribute traffic
@@ -298,12 +307,12 @@ Azure MySQL (Replica)
 
 ## 💰 Cost Comparison
 
-| Scenario | AWS Cost | Azure Cost | Total | Purpose |
-|----------|----------|------------|-------|---------|
-| **Normal Ops** | ~$100 | ~$25 | **$125** | Production + standby DB |
-| **During Failover** | $0 | ~$100 | **$100** | Azure becomes primary |
-| **After AWS Recovery** | ~$100 | ~$25 | **$125** | Back to normal |
-| **Both Active** | ~$100 | ~$100 | **$200** | High availability |
+| Scenario               | AWS Cost | Azure Cost | Total    | Purpose                 |
+| ---------------------- | -------- | ---------- | -------- | ----------------------- |
+| **Normal Ops**         | ~$100    | ~$25       | **$125** | Production + standby DB |
+| **During Failover**    | $0       | ~$100      | **$100** | Azure becomes primary   |
+| **After AWS Recovery** | ~$100    | ~$25       | **$125** | Back to normal          |
+| **Both Active**        | ~$100    | ~$100      | **$200** | High availability       |
 
 ---
 
@@ -312,6 +321,7 @@ Azure MySQL (Replica)
 ### 1. Database Must Exist First
 
 Before running Jenkins in FAILOVER mode:
+
 - ✅ Azure MySQL must already be deployed
 - ✅ Replication must be active
 - ✅ VPN tunnel must be established
@@ -323,6 +333,7 @@ Before running Jenkins in FAILOVER mode:
 **Q: Can the Jenkinsfile be at the root of tf-az-infra-demoGitea?**
 
 **A: YES!** ✅ It's already there:
+
 ```
 TF-AZ-INFRA-DEMOGITEA/
 ├── Jenkinsfile              ← HERE
@@ -333,6 +344,7 @@ TF-AZ-INFRA-DEMOGITEA/
 ```
 
 Jenkins will:
+
 1. Clone this repo
 2. Find `Jenkinsfile` in the root
 3. Execute the pipeline

@@ -62,44 +62,44 @@ Navigate to: **Jenkins → Manage Jenkins → Credentials → Global → Add Cre
 
 ### Credential 1: Azure Service Principal
 
-| Field | Value |
-|-------|-------|
-| **Kind** | Azure Service Principal |
-| **ID** | `azure-service-principal` |
-| **Subscription ID** | Your Azure subscription ID |
-| **Client ID** | `appId` from service principal |
-| **Client Secret** | `password` from service principal |
-| **Tenant ID** | `tenant` from service principal |
-| **Description** | Azure Service Principal for Terraform |
+| Field               | Value                                 |
+| ------------------- | ------------------------------------- |
+| **Kind**            | Azure Service Principal               |
+| **ID**              | `azure-service-principal`             |
+| **Subscription ID** | Your Azure subscription ID            |
+| **Client ID**       | `appId` from service principal        |
+| **Client Secret**   | `password` from service principal     |
+| **Tenant ID**       | `tenant` from service principal       |
+| **Description**     | Azure Service Principal for Terraform |
 
 ### Credential 2: MySQL Admin Password
 
-| Field | Value |
-|-------|-------|
-| **Kind** | Secret text |
-| **ID** | `mysql-admin-password` |
-| **Secret** | Your MySQL admin password (e.g., `SecurePassword123!`) |
-| **Description** | Azure MySQL admin password |
+| Field           | Value                                                  |
+| --------------- | ------------------------------------------------------ |
+| **Kind**        | Secret text                                            |
+| **ID**          | `mysql-admin-password`                                 |
+| **Secret**      | Your MySQL admin password (e.g., `SecurePassword123!`) |
+| **Description** | Azure MySQL admin password                             |
 
 ### Credential 3: Azure SSH Public Key
 
-| Field | Value |
-|-------|-------|
-| **Kind** | Secret text |
-| **ID** | `azure-ssh-public-key` |
-| **Secret** | Content of `~/.ssh/azure-gitea-key.pub` |
-| **Description** | SSH public key for Azure VM |
+| Field           | Value                                   |
+| --------------- | --------------------------------------- |
+| **Kind**        | Secret text                             |
+| **ID**          | `azure-ssh-public-key`                  |
+| **Secret**      | Content of `~/.ssh/azure-gitea-key.pub` |
+| **Description** | SSH public key for Azure VM             |
 
 ### Credential 4: Azure SSH Private Key
 
-| Field | Value |
-|-------|-------|
-| **Kind** | SSH Username with private key |
-| **ID** | `azure-ssh-key` |
-| **Username** | `azureuser` |
+| Field           | Value                                                      |
+| --------------- | ---------------------------------------------------------- |
+| **Kind**        | SSH Username with private key                              |
+| **ID**          | `azure-ssh-key`                                            |
+| **Username**    | `azureuser`                                                |
 | **Private Key** | Enter directly → paste content of `~/.ssh/azure-gitea-key` |
-| **Passphrase** | (leave empty if no passphrase) |
-| **Description** | SSH private key for Ansible |
+| **Passphrase**  | (leave empty if no passphrase)                             |
+| **Description** | SSH private key for Ansible                                |
 
 ## 📝 Create Jenkins Pipeline Job
 
@@ -120,13 +120,13 @@ Navigate to: **Jenkins → Manage Jenkins → Credentials → Global → Add Cre
 
 #### Pipeline Section
 
-| Field | Value |
-|-------|-------|
-| **Definition** | Pipeline script from SCM |
-| **SCM** | Git |
+| Field              | Value                                                      |
+| ------------------ | ---------------------------------------------------------- |
+| **Definition**     | Pipeline script from SCM                                   |
+| **SCM**            | Git                                                        |
 | **Repository URL** | `https://github.com/andreaendigital/tf-az-infra-demoGitea` |
-| **Branch** | `DEMO-23-write-terraform-azure-infra-repo` |
-| **Script Path** | `Jenkinsfile` |
+| **Branch**         | `DEMO-23-write-terraform-azure-infra-repo`                 |
+| **Script Path**    | `Jenkinsfile`                                              |
 
 #### Advanced Options (Optional)
 
@@ -152,6 +152,7 @@ Click **Save**
 3. Click **Build**
 
 This will create:
+
 - Resource Group
 - VNet + Subnets
 - MySQL Flexible Server (ready for replication)
@@ -171,6 +172,7 @@ This will create:
 3. Click **Build**
 
 This will create:
+
 - VM (Standard_B2s)
 - Load Balancer
 - Install Gitea via Ansible
@@ -190,63 +192,77 @@ This will create:
 ## 📊 Pipeline Stages Explained
 
 ### Stage 1: Preparation
+
 - Displays configuration
 - Shows deployment mode
 
 ### Stage 2: Clone Repositories
+
 - Clones `tf-az-infra-demoGitea` (Terraform)
 - Clones `ansible-az-demoGitea` (Ansible)
 
 ### Stage 3: Verify Azure Credentials
+
 - Tests Azure Service Principal authentication
 - Validates subscription access
 
 ### Stage 4: Terraform Init
+
 - Initializes Terraform backend
 - Downloads required providers
 
 ### Stage 5: Terraform Plan
+
 - Creates execution plan
 - Shows what will be created/changed/destroyed
 
 ### Stage 6: Terraform Apply
+
 - Deploys infrastructure
 - Outputs resource information
 
 ### Stage 7: Extract Terraform Outputs
+
 - Gets VM public IP
 - Gets MySQL connection details
 - Saves for Ansible use
 
 ### Stage 8: Configure Ansible Inventory
+
 - Auto-generates `inventory.ini`
 - Populates with Terraform outputs
 
 ### Stage 9: Wait for VM to be Ready
+
 - Waits for Azure VM to complete initialization
 - Tests SSH connectivity
 
 ### Stage 10: Run Ansible Playbook
+
 - Installs Gitea binary
 - Configures MySQL connection
 - Sets up systemd service
 - Starts Gitea
 
 ### Stage 11: Verify Gitea Deployment
+
 - Tests Gitea HTTP endpoint
 - Confirms application is running
 
 ### Stage 12: Terraform Destroy (Optional)
+
 - Destroys all resources
 - Requires manual confirmation
 
 ## 🔔 Notifications
 
 The pipeline sends Discord notifications on:
+
 - ✅ **Success**: Deployment completed with Gitea URL
 - ❌ **Failure**: Error details and build link
 
 Configure webhook URL in Jenkinsfile:
+
 ```groovy
 environment {
     DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/YOUR_WEBHOOK_HERE"
@@ -258,6 +274,7 @@ environment {
 ### Issue: Azure authentication fails
 
 **Solution:**
+
 ```bash
 # Verify service principal
 az login --service-principal \
@@ -272,6 +289,7 @@ az role assignment list --assignee <CLIENT_ID>
 ### Issue: SSH connection to VM fails
 
 **Solution:**
+
 1. Verify SSH key credential ID matches in Jenkinsfile: `azure-ssh-key`
 2. Check NSG allows SSH from Jenkins server IP
 3. Wait longer for VM initialization (cloud-init takes ~2-3 minutes)
@@ -279,6 +297,7 @@ az role assignment list --assignee <CLIENT_ID>
 ### Issue: Ansible fails to find inventory
 
 **Solution:**
+
 - Inventory is auto-generated in stage "Configure Ansible Inventory"
 - Check Terraform outputs are extracted correctly
 - Verify `${WORKSPACE}/${INVENTORY_FILE}` path is correct
@@ -286,6 +305,7 @@ az role assignment list --assignee <CLIENT_ID>
 ### Issue: Gitea doesn't start
 
 **Solution:**
+
 ```bash
 # SSH to Azure VM
 ssh azureuser@<VM_PUBLIC_IP>
@@ -303,6 +323,7 @@ mysql -h <MYSQL_HOST> -u <USER> -p
 ### Issue: Terraform state locked
 
 **Solution:**
+
 ```bash
 # In Jenkins, run shell command:
 cd infra
@@ -334,6 +355,7 @@ TF-AZ-INFRA-DEMOGITEA/
 ### Phase 1: Initial Setup (Do Once)
 
 1. **Deploy Azure Database** (FULL_STACK mode, Ansible=false)
+
    ```
    Jenkins → Build with Parameters
    Mode: FULL_STACK
@@ -355,14 +377,17 @@ TF-AZ-INFRA-DEMOGITEA/
 1. **Detect AWS failure** (monitoring alert)
 
 2. **Deploy Azure Application** (FAILOVER mode)
+
    ```
    Jenkins → Build with Parameters
    Mode: FAILOVER
    Ansible: true
    ```
+
    ⏱️ Time: ~15-20 minutes
 
 3. **Promote Azure MySQL** (manual):
+
    ```sql
    STOP SLAVE;
    RESET SLAVE ALL;
@@ -397,6 +422,7 @@ TF-AZ-INFRA-DEMOGITEA/
 ## 🆘 Support
 
 For issues or questions:
+
 1. Check Jenkins console output for errors
 2. Review Terraform state: `terraform show`
 3. Verify Azure resources in portal
