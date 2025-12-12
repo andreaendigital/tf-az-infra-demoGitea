@@ -30,16 +30,7 @@ resource "azurerm_subnet" "database" {
   virtual_network_name = azurerm_virtual_network.main.name
   address_prefixes     = [var.subnet_database_address_prefix]
 
-  delegation {
-    name = "mysql-delegation"
-
-    service_delegation {
-      name = "Microsoft.DBforMySQL/flexibleServers"
-      actions = [
-        "Microsoft.Network/virtualNetworks/subnets/join/action",
-      ]
-    }
-  }
+  
 }
 
 # Subnet for VPN Gateway
