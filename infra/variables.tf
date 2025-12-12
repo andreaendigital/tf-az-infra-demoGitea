@@ -215,9 +215,9 @@ variable "master_log_pos" {
 # ====================================
 
 variable "vm_size" {
-  description = "Size of the VM (e.g., Standard_B1s)"
+  description = "Size of the VM (e.g., Standard_B2s)"
   type        = string
-  default     = "Standard_B1s"
+  default     = "Standard_B2s"
 }
 
 variable "vm_admin_username" {
