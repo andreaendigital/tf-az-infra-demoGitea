@@ -46,10 +46,25 @@ output "vpn_gateway_public_ip" {
   value       = var.enable_vpn_gateway ? azurerm_public_ip.vpn_gateway[0].ip_address : null
 }
 
+
 # ====================================
 # Database Outputs
 # ====================================
-/* MySQL Flexible Server outputs removed. MySQL will be provided by a VM; new outputs will be added after VM creation. */
+
+output "mysql_vm_id" {
+  description = "ID of the MySQL VM"
+  value       = azurerm_linux_virtual_machine.mysql.id
+}
+
+output "mysql_vm_name" {
+  description = "Name of the MySQL VM"
+  value       = azurerm_linux_virtual_machine.mysql.name
+}
+
+output "mysql_vm_private_ip" {
+  description = "Private IP address of the MySQL VM"
+  value       = azurerm_network_interface.mysql.private_ip_address
+}
 
 # ====================================
 # Load Balancer Outputs
@@ -98,12 +113,14 @@ output "ssh_connection_string" {
 # Ansible Inventory Output
 # ====================================
 
+
 output "ansible_inventory" {
   description = "Ansible inventory information"
   value = {
-    vm_private_ip = azurerm_network_interface.main.private_ip_address
-    vm_public_ip  = azurerm_public_ip.vm.ip_address
-    ssh_user      = var.vm_admin_username
+    vm_private_ip      = azurerm_network_interface.main.private_ip_address
+    vm_public_ip       = azurerm_public_ip.vm.ip_address
+    mysql_vm_private_ip = azurerm_network_interface.mysql.private_ip_address
+    ssh_user           = var.vm_admin_username
   }
   sensitive = true
 }
