@@ -17,7 +17,7 @@ variable "environment" {
 variable "location" {
   description = "Azure region where resources will be created"
   type        = string
-  default     = "South Central US"
+  default     = "East US"
 }
 
 variable "tags" {
