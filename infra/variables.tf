@@ -101,70 +101,7 @@ variable "vpn_shared_key" {
   default     = ""
 }
 
-# ====================================
-# MySQL Database Variables
-# ====================================
-
-variable "mysql_admin_username" {
-  description = "Administrator username for MySQL"
-  type        = string
-  sensitive   = true
-  default     = "gitea_admin"
-}
-
-variable "mysql_admin_password" {
-  description = "Administrator password for MySQL"
-  type        = string
-  sensitive   = true
-}
-
-variable "mysql_sku_name" {
-  description = "SKU name for MySQL Flexible Server (e.g., B_Standard_B1ms)"
-  type        = string
-  default     = "B_Standard_B1ms"
-}
-
-variable "mysql_version" {
-  description = "MySQL version"
-  type        = string
-  default     = "8.0.21"
-}
-
-variable "mysql_storage_size_gb" {
-  description = "Storage size in GB for MySQL"
-  type        = number
-  default     = 20
-}
-
-variable "mysql_storage_iops" {
-  description = "Storage IOPS for MySQL"
-  type        = number
-  default     = 360
-}
-
-variable "mysql_backup_retention_days" {
-  description = "Backup retention period in days"
-  type        = number
-  default     = 7
-}
-
-variable "mysql_geo_redundant_backup" {
-  description = "Enable geo-redundant backups"
-  type        = bool
-  default     = false
-}
-
-variable "mysql_database_name" {
-  description = "Name of the Gitea database"
-  type        = string
-  default     = "infraGiteaDB"
-}
-
-variable "mysql_allow_azure_services" {
-  description = "Allow Azure services to access the database"
-  type        = bool
-  default     = false
-}
+# MySQL Flexible Server variables removed. Using VM-based MySQL instead.
 
 # ====================================
 # MySQL Replication Variables (AWS RDS)
