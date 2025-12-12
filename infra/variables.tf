@@ -56,7 +56,13 @@ variable "subnet_database_address_prefix" {
 variable "subnet_gateway_address_prefix" {
   description = "Address prefix for VPN gateway subnet"
   type        = string
-  default     = "10.1.255.0/27"
+  default     = "10.1.3.0/24"
+}
+
+variable "allowed_ssh_ips" {
+  description = "List of IP addresses allowed for SSH access. Leave empty to use admin_source_ip"
+  type        = list(string)
+  default     = []
 }
 
 variable "admin_source_ip" {
