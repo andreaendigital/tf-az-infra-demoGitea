@@ -81,13 +81,10 @@ pipeline {
             steps {
                 echo '🔐 Verifying Azure credentials...'
                 withCredentials([
-                    azureServicePrincipal(
-                        credentialsId: 'azure-service-principal',
-                        subscriptionIdVariable: 'ARM_SUBSCRIPTION_ID',
-                        clientIdVariable: 'ARM_CLIENT_ID',
-                        clientSecretVariable: 'ARM_CLIENT_SECRET',
-                        tenantIdVariable: 'ARM_TENANT_ID'
-                    )
+                    string(credentialsId: 'azure-client-id', variable: 'ARM_CLIENT_ID'),
+                    string(credentialsId: 'azure-client-secret', variable: 'ARM_CLIENT_SECRET'),
+                    string(credentialsId: 'azure-tenant-id', variable: 'ARM_TENANT_ID'),
+                    string(credentialsId: 'azure-subscription-id', variable: 'ARM_SUBSCRIPTION_ID')
                 ]) {
                     sh '''
                         echo "Azure credentials loaded"
@@ -136,13 +133,10 @@ pipeline {
             steps {
                 echo '⚙️  Initializing Terraform...'
                 withCredentials([
-                    azureServicePrincipal(
-                        credentialsId: 'azure-service-principal',
-                        subscriptionIdVariable: 'ARM_SUBSCRIPTION_ID',
-                        clientIdVariable: 'ARM_CLIENT_ID',
-                        clientSecretVariable: 'ARM_CLIENT_SECRET',
-                        tenantIdVariable: 'ARM_TENANT_ID'
-                    ),
+                    string(credentialsId: 'azure-client-id', variable: 'ARM_CLIENT_ID'),
+                    string(credentialsId: 'azure-client-secret', variable: 'ARM_CLIENT_SECRET'),
+                    string(credentialsId: 'azure-tenant-id', variable: 'ARM_TENANT_ID'),
+                    string(credentialsId: 'azure-subscription-id', variable: 'ARM_SUBSCRIPTION_ID'),
                     string(credentialsId: 'mysql-admin-password', variable: 'TF_VAR_mysql_admin_password'),
                     string(credentialsId: 'azure-ssh-public-key', variable: 'TF_VAR_ssh_public_key')
                 ]) {
@@ -164,13 +158,10 @@ pipeline {
             steps {
                 echo '📋 Planning Terraform changes...'
                 withCredentials([
-                    azureServicePrincipal(
-                        credentialsId: 'azure-service-principal',
-                        subscriptionIdVariable: 'ARM_SUBSCRIPTION_ID',
-                        clientIdVariable: 'ARM_CLIENT_ID',
-                        clientSecretVariable: 'ARM_CLIENT_SECRET',
-                        tenantIdVariable: 'ARM_TENANT_ID'
-                    ),
+                    string(credentialsId: 'azure-client-id', variable: 'ARM_CLIENT_ID'),
+                    string(credentialsId: 'azure-client-secret', variable: 'ARM_CLIENT_SECRET'),
+                    string(credentialsId: 'azure-tenant-id', variable: 'ARM_TENANT_ID'),
+                    string(credentialsId: 'azure-subscription-id', variable: 'ARM_SUBSCRIPTION_ID'),
                     string(credentialsId: 'mysql-admin-password', variable: 'TF_VAR_mysql_admin_password'),
                     string(credentialsId: 'azure-ssh-public-key', variable: 'TF_VAR_ssh_public_key')
                 ]) {
@@ -198,13 +189,10 @@ pipeline {
                     }
                     
                     withCredentials([
-                        azureServicePrincipal(
-                            credentialsId: 'azure-service-principal',
-                            subscriptionIdVariable: 'ARM_SUBSCRIPTION_ID',
-                            clientIdVariable: 'ARM_CLIENT_ID',
-                            clientSecretVariable: 'ARM_CLIENT_SECRET',
-                            tenantIdVariable: 'ARM_TENANT_ID'
-                        ),
+                        string(credentialsId: 'azure-client-id', variable: 'ARM_CLIENT_ID'),
+                        string(credentialsId: 'azure-client-secret', variable: 'ARM_CLIENT_SECRET'),
+                        string(credentialsId: 'azure-tenant-id', variable: 'ARM_TENANT_ID'),
+                        string(credentialsId: 'azure-subscription-id', variable: 'ARM_SUBSCRIPTION_ID'),
                         string(credentialsId: 'mysql-admin-password', variable: 'TF_VAR_mysql_admin_password'),
                         string(credentialsId: 'azure-ssh-public-key', variable: 'TF_VAR_ssh_public_key')
                     ]) {
@@ -232,13 +220,10 @@ pipeline {
             steps {
                 echo '📤 Extracting Terraform outputs for Ansible...'
                 withCredentials([
-                    azureServicePrincipal(
-                        credentialsId: 'azure-service-principal',
-                        subscriptionIdVariable: 'ARM_SUBSCRIPTION_ID',
-                        clientIdVariable: 'ARM_CLIENT_ID',
-                        clientSecretVariable: 'ARM_CLIENT_SECRET',
-                        tenantIdVariable: 'ARM_TENANT_ID'
-                    )
+                    string(credentialsId: 'azure-client-id', variable: 'ARM_CLIENT_ID'),
+                    string(credentialsId: 'azure-client-secret', variable: 'ARM_CLIENT_SECRET'),
+                    string(credentialsId: 'azure-tenant-id', variable: 'ARM_TENANT_ID'),
+                    string(credentialsId: 'azure-subscription-id', variable: 'ARM_SUBSCRIPTION_ID')
                 ]) {
                     dir("${TF_DIR}") {
                         script {
@@ -401,13 +386,10 @@ mysql_dbname=${env.MYSQL_DBNAME}
                     }
                     
                     withCredentials([
-                        azureServicePrincipal(
-                            credentialsId: 'azure-service-principal',
-                            subscriptionIdVariable: 'ARM_SUBSCRIPTION_ID',
-                            clientIdVariable: 'ARM_CLIENT_ID',
-                            clientSecretVariable: 'ARM_CLIENT_SECRET',
-                            tenantIdVariable: 'ARM_TENANT_ID'
-                        ),
+                        string(credentialsId: 'azure-client-id', variable: 'ARM_CLIENT_ID'),
+                        string(credentialsId: 'azure-client-secret', variable: 'ARM_CLIENT_SECRET'),
+                        string(credentialsId: 'azure-tenant-id', variable: 'ARM_TENANT_ID'),
+                        string(credentialsId: 'azure-subscription-id', variable: 'ARM_SUBSCRIPTION_ID'),
                         string(credentialsId: 'mysql-admin-password', variable: 'TF_VAR_mysql_admin_password'),
                         string(credentialsId: 'azure-ssh-public-key', variable: 'TF_VAR_ssh_public_key')
                     ]) {
