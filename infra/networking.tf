@@ -161,7 +161,7 @@ resource "azurerm_subnet_network_security_group_association" "database" {
 
 # Public IP for VPN Gateway
 resource "azurerm_public_ip" "vpn_gateway" {
-  count               = var.enable_vpn_gateway ? 1 : 0
+  count               = var.deployment_mode == "replica-only" ? 1 : 0
   name                = "pip-vpngateway-${var.project_name}-${var.environment}"
   location            = var.location
   resource_group_name = azurerm_resource_group.main.name
@@ -173,9 +173,9 @@ resource "azurerm_public_ip" "vpn_gateway" {
   })
 }
 
-# VPN Gateway
+# VPN Gateway (only in replica-only mode)
 resource "azurerm_virtual_network_gateway" "main" {
-  count               = var.enable_vpn_gateway ? 1 : 0
+  count               = var.deployment_mode == "replica-only" ? 1 : 0
   name                = "vpngw-${var.project_name}-${var.environment}"
   location            = var.location
   resource_group_name = azurerm_resource_group.main.name
@@ -201,7 +201,7 @@ resource "azurerm_virtual_network_gateway" "main" {
 
 # Local Network Gateway (AWS side)
 resource "azurerm_local_network_gateway" "aws" {
-  count               = var.enable_vpn_gateway && var.aws_vpn_gateway_ip != "" ? 1 : 0
+  count               = var.deployment_mode == "replica-only" && var.aws_vpn_gateway_ip != "" ? 1 : 0
   name                = "lng-aws-${var.environment}"
   location            = var.location
   resource_group_name = azurerm_resource_group.main.name
@@ -215,7 +215,7 @@ resource "azurerm_local_network_gateway" "aws" {
 
 # VPN Connection to AWS
 resource "azurerm_virtual_network_gateway_connection" "aws" {
-  count               = var.enable_vpn_gateway && var.aws_vpn_gateway_ip != "" ? 1 : 0
+  count               = var.deployment_mode == "replica-only" && var.aws_vpn_gateway_ip != "" ? 1 : 0
   name                = "vpnconn-to-aws-${var.environment}"
   location            = var.location
   resource_group_name = azurerm_resource_group.main.name

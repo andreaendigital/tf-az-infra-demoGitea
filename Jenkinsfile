@@ -3,10 +3,17 @@ pipeline {
 
     parameters {
         booleanParam(name: 'PLAN_TERRAFORM', defaultValue: true, description: 'Run terraform plan to preview infrastructure changes')
-        booleanParam(name: 'APPLY_TERRAFORM', defaultValue: true, description: 'Apply infrastructure changes using terraform apply (VM, LB, networking)')
-        booleanParam(name: 'DEPLOY_ANSIBLE', defaultValue: true, description: 'Run Ansible to deploy Gitea application on Azure VM')
+        booleanParam(name: 'APPLY_TERRAFORM', defaultValue: true, description: 'Apply infrastructure changes using terraform apply')
+        booleanParam(name: 'DEPLOY_ANSIBLE', defaultValue: true, description: 'Run Ansible to configure infrastructure')
         booleanParam(name: 'DESTROY_TERRAFORM', defaultValue: false, description: '⚠️ DANGER: Destroy infrastructure using terraform destroy')
-        choice(name: 'DEPLOYMENT_MODE', choices: ['FAILOVER', 'FULL_STACK'], description: 'FAILOVER: Deploy only app infra (DB already exists). FULL_STACK: Deploy everything including database.')
+        choice(
+            name: 'DEPLOYMENT_MODE', 
+            choices: ['full-stack', 'replica-only', 'failover'], 
+            description: '''Deployment mode:
+• full-stack: Complete demo (Gitea + MySQL + Load Balancer)
+• replica-only: Only MySQL VM as AWS replica (no Gitea, activates VPN)
+• failover: Restore Gitea using existing MySQL replica from AWS'''
+        )
     }
 
     environment {
@@ -38,11 +45,21 @@ pipeline {
                     echo "Ansible: ${params.DEPLOY_ANSIBLE}"
                     echo "═══════════════════════════════════════════════════"
                     
-                    if (params.DEPLOYMENT_MODE == 'FAILOVER') {
-                        echo "⚠️  FAILOVER MODE: Assumes MySQL database already exists and is replicating from AWS"
-                        echo "    This will deploy: VM, Load Balancer, and Gitea application"
+                    if (params.DEPLOYMENT_MODE == 'full-stack') {
+                        echo "📦 FULL-STACK MODE: Complete demo infrastructure"
+                        echo "    Deploys: Gitea VM + MySQL VM + Load Balancer"
+                        echo "    MySQL VM gets temporary public IP for Ansible setup"
+                    } else if (params.DEPLOYMENT_MODE == 'replica-only') {
+                        echo "🔄 REPLICA-ONLY MODE: MySQL as AWS replica"
+                        echo "    Deploys: MySQL VM (private) + VPN Gateway"
+                        echo "    Destroys: Gitea VM, Load Balancer"
+                        echo "    ⚠️  Requires: AWS VPN Gateway IP configured"
                     } else {
-                        echo "📦 FULL_STACK MODE: Will deploy complete infrastructure including database"
+                        echo "⚡ FAILOVER MODE: Restore application with existing MySQL"
+                        echo "    Deploys: Gitea VM + Load Balancer"
+                        echo "    Uses: Existing MySQL VM with replicated data"
+                        echo "    ⚠️  Assumes MySQL VM already exists"
+                    }
                     }
                 }
             }
@@ -164,9 +181,9 @@ pipeline {
                     string(credentialsId: 'azure-ssh-public-key', variable: 'TF_VAR_ssh_public_key')
                 ]) {
                     dir("${TF_DIR}") {
-                        sh '''
-                            terraform plan -out=tfplan
-                        '''
+                        sh """
+                            terraform plan -var="deployment_mode=${params.DEPLOYMENT_MODE}" -out=tfplan
+                        """
                     }
                 }
                 echo '✅ Terraform plan completed - Review the changes above'
@@ -180,11 +197,7 @@ pipeline {
             steps {
                 script {
                     echo '🚀 Applying Terraform changes...'
-                    
-                    if (params.DEPLOYMENT_MODE == 'FAILOVER') {
-                        echo '⚠️  FAILOVER MODE: Deploying only VM and Load Balancer'
-                        echo '   Database is assumed to already exist and be replicating'
-                    }
+                    echo "Deployment mode: ${params.DEPLOYMENT_MODE}"
                     
                     withCredentials([
                         string(credentialsId: 'azure-client-id', variable: 'ARM_CLIENT_ID'),
@@ -224,23 +237,38 @@ pipeline {
                 ]) {
                     dir("${TF_DIR}") {
                         script {
-                            // Extract outputs and save to environment variables
-                            env.VM_PUBLIC_IP = sh(
-                                script: 'terraform output -raw vm_public_ip',
-                                returnStdout: true
-                            ).trim()
+                            // Extract outputs based on deployment mode
+                            if (params.DEPLOYMENT_MODE != 'replica-only') {
+                                env.VM_PUBLIC_IP = sh(
+                                    script: 'terraform output -raw vm_public_ip',
+                                    returnStdout: true
+                                ).trim()
+                            }
                             
-                            // MySQL VM private IP (for internal communication)
+                            // MySQL VM IPs
                             env.MYSQL_VM_PRIVATE_IP = sh(
                                 script: 'terraform output -raw mysql_vm_private_ip',
                                 returnStdout: true
                             ).trim()
                             
+                            if (params.DEPLOYMENT_MODE == 'full-stack') {
+                                env.MYSQL_VM_PUBLIC_IP = sh(
+                                    script: 'terraform output -raw mysql_vm_public_ip',
+                                    returnStdout: true
+                                ).trim()
+                            }
+                            
                             echo "════════════════════════════════════════"
                             echo "📊 EXTRACTED VALUES FOR ANSIBLE"
                             echo "════════════════════════════════════════"
-                            echo "VM Public IP: ${env.VM_PUBLIC_IP}"
+                            echo "Deployment Mode: ${params.DEPLOYMENT_MODE}"
+                            if (params.DEPLOYMENT_MODE != 'replica-only') {
+                                echo "Gitea VM Public IP: ${env.VM_PUBLIC_IP}"
+                            }
                             echo "MySQL VM Private IP: ${env.MYSQL_VM_PRIVATE_IP}"
+                            if (params.DEPLOYMENT_MODE == 'full-stack') {
+                                echo "MySQL VM Public IP: ${env.MYSQL_VM_PUBLIC_IP}"
+                            }
                             echo "════════════════════════════════════════"
                         }
                     }
@@ -256,20 +284,50 @@ pipeline {
             steps {
                 echo '📝 Configuring Ansible inventory with Terraform outputs...'
                 script {
-                    // Generate inventory.ini dynamically with Terraform outputs
-                    def inventoryContent = """# Ansible Inventory for Azure Gitea
-# Auto-generated by Jenkins Pipeline
+                    def inventoryContent = ""
+                    
+                    if (params.DEPLOYMENT_MODE == 'full-stack') {
+                        // Full stack: both Gitea and MySQL
+                        inventoryContent = """# Ansible Inventory for Azure Gitea
+# Auto-generated by Jenkins Pipeline - Mode: ${params.DEPLOYMENT_MODE}
 # Generated: ${new Date()}
 
 [azureGitea]
 gitea-vm ansible_host=${env.VM_PUBLIC_IP} ansible_user=azureuser
 
 [mysql]
-mysql-vm ansible_host=${env.MYSQL_VM_PRIVATE_IP} ansible_user=azureuser
+mysql-vm ansible_host=${env.MYSQL_VM_PUBLIC_IP} ansible_user=azureuser
 
 [all:vars]
 mysql_host=${env.MYSQL_VM_PRIVATE_IP}
+deployment_mode=${params.DEPLOYMENT_MODE}
 """
+                    } else if (params.DEPLOYMENT_MODE == 'failover') {
+                        // Failover: only Gitea, MySQL already exists
+                        inventoryContent = """# Ansible Inventory for Azure Gitea
+# Auto-generated by Jenkins Pipeline - Mode: ${params.DEPLOYMENT_MODE}
+# Generated: ${new Date()}
+
+[azureGitea]
+gitea-vm ansible_host=${env.VM_PUBLIC_IP} ansible_user=azureuser
+
+[all:vars]
+mysql_host=${env.MYSQL_VM_PRIVATE_IP}
+deployment_mode=${params.DEPLOYMENT_MODE}
+"""
+                    } else {
+                        // replica-only: only MySQL (no Gitea deployment)
+                        inventoryContent = """# Ansible Inventory for Azure Gitea
+# Auto-generated by Jenkins Pipeline - Mode: ${params.DEPLOYMENT_MODE}
+# Generated: ${new Date()}
+
+[mysql]
+mysql-vm ansible_host=${env.MYSQL_VM_PRIVATE_IP} ansible_user=azureuser
+
+[all:vars]
+deployment_mode=${params.DEPLOYMENT_MODE}
+"""
+                    }
                     
                     writeFile file: "${INVENTORY_FILE}", text: inventoryContent
                     
@@ -314,10 +372,11 @@ mysql_host=${env.MYSQL_VM_PRIVATE_IP}
                         sh """
                             cd ${ANSIBLE_DIR}
                             
-                            # Run Ansible playbook with MySQL password as extra-vars
+                            # Run Ansible playbook with deployment mode and MySQL password
                             ansible-playbook -i ${WORKSPACE}/${INVENTORY_FILE} playbook.yml \
                                 --extra-vars 'ansible_ssh_common_args="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"' \
                                 --extra-vars "mysql_root_password=${MYSQL_ROOT_PASSWORD}" \
+                                --extra-vars "deployment_mode=${params.DEPLOYMENT_MODE}" \
                                 -v
                         """
                     }
