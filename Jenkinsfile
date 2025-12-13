@@ -374,11 +374,12 @@ deployment_mode=${params.DEPLOYMENT_MODE}
                             # Run Ansible playbook with all MySQL credentials from Jenkins secrets
                             # No hardcoded credentials - all injected from Jenkins Credentials store
                             # Note: Do NOT override ansible_ssh_common_args - it contains ProxyJump config in inventory
+                            # Variable mapping: Jenkins credentials → Ansible role variables
                             ansible-playbook -i ${WORKSPACE}/${INVENTORY_FILE} playbook.yml \
                                 --extra-vars "mysql_root_password=${MYSQL_ROOT_PASSWORD}" \
-                                --extra-vars "mysql_dbname=${MYSQL_DBNAME}" \
-                                --extra-vars "mysql_username=${MYSQL_USERNAME}" \
-                                --extra-vars "mysql_password=${MYSQL_PASSWORD}" \
+                                --extra-vars "gitea_db_name=${MYSQL_DBNAME}" \
+                                --extra-vars "gitea_db_user=${MYSQL_USERNAME}" \
+                                --extra-vars "gitea_db_password=${MYSQL_PASSWORD}" \
                                 --extra-vars "deployment_mode=${params.DEPLOYMENT_MODE}" \
                                 -v
                         """
