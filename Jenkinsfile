@@ -326,15 +326,20 @@ mysql_dbname=${env.MYSQL_DBNAME}
             }
             steps {
                 echo '🎭 Running Ansible playbook to deploy Gitea...'
-                sshagent(credentials: ['azure-ssh-key']) {
-                    sh """
-                        cd ${ANSIBLE_DIR}
-                        
-                        # Run Ansible playbook
-                        ansible-playbook -i ${WORKSPACE}/${INVENTORY_FILE} ${PLAYBOOK_FILE} \
-                            --extra-vars 'ansible_ssh_common_args="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"' \
-                            -v
-                    """
+                withCredentials([
+                    string(credentialsId: 'mysql-admin-password', variable: 'MYSQL_ROOT_PASSWORD')
+                ]) {
+                    sshagent(credentials: ['azure-ssh-key']) {
+                        sh """
+                            cd ${ANSIBLE_DIR}
+                            
+                            # Run Ansible playbook with MySQL password as extra-vars
+                            ansible-playbook -i ${WORKSPACE}/${INVENTORY_FILE} playbook.yml \
+                                --extra-vars 'ansible_ssh_common_args="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"' \
+                                --extra-vars "mysql_root_password=${MYSQL_ROOT_PASSWORD}" \
+                                -v
+                        """
+                    }
                 }
                 echo '✅ Ansible deployment completed'
             }
