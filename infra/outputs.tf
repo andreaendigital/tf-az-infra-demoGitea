@@ -62,13 +62,8 @@ output "mysql_vm_name" {
 }
 
 output "mysql_vm_private_ip" {
-  description = "Private IP address of the MySQL VM"
+  description = "Private IP address of the MySQL VM (access via jump host through Gitea VM)"
   value       = azurerm_network_interface.mysql.private_ip_address
-}
-
-output "mysql_vm_public_ip" {
-  description = "Public IP address of the MySQL VM (full-stack mode only)"
-  value       = var.deployment_mode == "full-stack" ? azurerm_public_ip.mysql[0].ip_address : null
 }
 
 # ====================================
@@ -119,12 +114,11 @@ output "ssh_connection_string" {
 # ====================================
 
 output "ansible_inventory" {
-  description = "Ansible inventory information"
+  description = "Ansible inventory information (MySQL accessed via jump host)"
   value = var.deployment_mode != "replica-only" ? {
     vm_private_ip        = azurerm_network_interface.main[0].private_ip_address
     vm_public_ip         = azurerm_public_ip.vm[0].ip_address
     mysql_vm_private_ip  = azurerm_network_interface.mysql.private_ip_address
-    mysql_vm_public_ip   = var.deployment_mode == "full-stack" ? azurerm_public_ip.mysql[0].ip_address : null
     ssh_user             = var.vm_admin_username
     deployment_mode      = var.deployment_mode
   } : {

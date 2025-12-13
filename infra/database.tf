@@ -3,21 +3,8 @@
 # Compute - Linux VM for MySQL
 # ====================================
 
-# Public IP for MySQL VM (only in full-stack mode for Ansible access)
-resource "azurerm_public_ip" "mysql" {
-	count               = var.deployment_mode == "full-stack" ? 1 : 0
-	name                = "pip-mysql-${var.project_name}-${var.environment}"
-	location            = var.location
-	resource_group_name = azurerm_resource_group.main.name
-	allocation_method   = "Static"
-	sku                 = "Standard"
-
-	tags = merge(var.tags, {
-		environment = var.environment
-		component   = "database"
-		purpose     = "ansible-ssh-access"
-	})
-}
+# Note: MySQL VM does not have a public IP
+# Access is via SSH jump host through Gitea VM for security and quota optimization
 
 resource "azurerm_network_interface" "mysql" {
 	name                = "nic-mysql-${var.project_name}-${var.environment}"
@@ -28,8 +15,7 @@ resource "azurerm_network_interface" "mysql" {
 		name                          = "internal"
 		subnet_id                     = azurerm_subnet.database.id
 		private_ip_address_allocation = "Dynamic"
-		# Public IP only in full-stack mode
-		public_ip_address_id          = var.deployment_mode == "full-stack" ? azurerm_public_ip.mysql[0].id : null
+		# No public IP - access via jump host through Gitea VM
 	}
 
 	tags = merge(var.tags, {
