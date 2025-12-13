@@ -14,6 +14,17 @@ variable "environment" {
   default     = "demo"
 }
 
+variable "deployment_mode" {
+  description = "Deployment mode: full-stack (complete demo), replica-only (MySQL as AWS replica), or failover (restore Gitea with existing MySQL)"
+  type        = string
+  default     = "full-stack"
+  
+  validation {
+    condition     = contains(["full-stack", "replica-only", "failover"], var.deployment_mode)
+    error_message = "deployment_mode must be one of: full-stack, replica-only, failover"
+  }
+}
+
 variable "location" {
   description = "Azure region where resources will be created"
   type        = string

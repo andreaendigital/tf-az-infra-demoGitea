@@ -42,8 +42,8 @@ output "subnet_database_id" {
 }
 
 output "vpn_gateway_public_ip" {
-  description = "Public IP of the VPN Gateway (if enabled)"
-  value       = var.enable_vpn_gateway ? azurerm_public_ip.vpn_gateway[0].ip_address : null
+  description = "Public IP of the VPN Gateway (replica-only mode)"
+  value       = var.deployment_mode == "replica-only" ? azurerm_public_ip.vpn_gateway[0].ip_address : null
 }
 
 
@@ -66,18 +66,23 @@ output "mysql_vm_private_ip" {
   value       = azurerm_network_interface.mysql.private_ip_address
 }
 
+output "mysql_vm_public_ip" {
+  description = "Public IP address of the MySQL VM (full-stack mode only)"
+  value       = var.deployment_mode == "full-stack" ? azurerm_public_ip.mysql[0].ip_address : null
+}
+
 # ====================================
 # Load Balancer Outputs
 # ====================================
 
 output "load_balancer_public_ip" {
-  description = "Public IP address of the load balancer"
-  value       = azurerm_public_ip.lb.ip_address
+  description = "Public IP address of the load balancer (full-stack and failover)"
+  value       = var.deployment_mode != "replica-only" ? azurerm_public_ip.lb[0].ip_address : null
 }
 
 output "gitea_url" {
-  description = "URL to access Gitea application"
-  value       = "http://${azurerm_public_ip.lb.ip_address}"
+  description = "URL to access Gitea application (full-stack and failover)"
+  value       = var.deployment_mode != "replica-only" ? "http://${azurerm_public_ip.lb[0].ip_address}" : null
 }
 
 # ====================================
@@ -85,42 +90,47 @@ output "gitea_url" {
 # ====================================
 
 output "vm_id" {
-  description = "ID of the virtual machine"
-  value       = azurerm_linux_virtual_machine.main.id
+  description = "ID of the virtual machine (full-stack and failover)"
+  value       = var.deployment_mode != "replica-only" ? azurerm_linux_virtual_machine.main[0].id : null
 }
 
 output "vm_name" {
-  description = "Name of the virtual machine"
-  value       = azurerm_linux_virtual_machine.main.name
+  description = "Name of the virtual machine (full-stack and failover)"
+  value       = var.deployment_mode != "replica-only" ? azurerm_linux_virtual_machine.main[0].name : null
 }
 
 output "vm_private_ip" {
-  description = "Private IP address of the VM"
-  value       = azurerm_network_interface.main.private_ip_address
+  description = "Private IP address of the VM (full-stack and failover)"
+  value       = var.deployment_mode != "replica-only" ? azurerm_network_interface.main[0].private_ip_address : null
 }
 
 output "vm_public_ip" {
-  description = "Public IP address of the VM (for SSH/Ansible access)"
-  value       = azurerm_public_ip.vm.ip_address
+  description = "Public IP address of the VM for SSH/Ansible (full-stack and failover)"
+  value       = var.deployment_mode != "replica-only" ? azurerm_public_ip.vm[0].ip_address : null
 }
 
 output "ssh_connection_string" {
-  description = "SSH command to connect directly to the VM"
-  value       = "ssh ${var.vm_admin_username}@${azurerm_public_ip.vm.ip_address}"
+  description = "SSH command to connect directly to the VM (full-stack and failover)"
+  value       = var.deployment_mode != "replica-only" ? "ssh ${var.vm_admin_username}@${azurerm_public_ip.vm[0].ip_address}" : null
 }
 
 # ====================================
 # Ansible Inventory Output
 # ====================================
 
-
 output "ansible_inventory" {
   description = "Ansible inventory information"
-  value = {
-    vm_private_ip      = azurerm_network_interface.main.private_ip_address
-    vm_public_ip       = azurerm_public_ip.vm.ip_address
-    mysql_vm_private_ip = azurerm_network_interface.mysql.private_ip_address
-    ssh_user           = var.vm_admin_username
+  value = var.deployment_mode != "replica-only" ? {
+    vm_private_ip        = azurerm_network_interface.main[0].private_ip_address
+    vm_public_ip         = azurerm_public_ip.vm[0].ip_address
+    mysql_vm_private_ip  = azurerm_network_interface.mysql.private_ip_address
+    mysql_vm_public_ip   = var.deployment_mode == "full-stack" ? azurerm_public_ip.mysql[0].ip_address : null
+    ssh_user             = var.vm_admin_username
+    deployment_mode      = var.deployment_mode
+  } : {
+    mysql_vm_private_ip  = azurerm_network_interface.mysql.private_ip_address
+    ssh_user             = var.vm_admin_username
+    deployment_mode      = var.deployment_mode
   }
   sensitive = true
 }
