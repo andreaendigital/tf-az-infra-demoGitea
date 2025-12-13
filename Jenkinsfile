@@ -291,6 +291,9 @@ mysql-vm ansible_host=${env.MYSQL_VM_PRIVATE_IP} ansible_user=azureuser ansible_
 
 [all:vars]
 mysql_host=${env.MYSQL_VM_PRIVATE_IP}
+mysql_dbname=gitea
+mysql_username=gitea
+mysql_password=gitea123
 deployment_mode=${params.DEPLOYMENT_MODE}
 """
                     } else if (params.DEPLOYMENT_MODE == 'failover') {
@@ -304,6 +307,9 @@ gitea-vm ansible_host=${env.VM_PUBLIC_IP} ansible_user=azureuser
 
 [all:vars]
 mysql_host=${env.MYSQL_VM_PRIVATE_IP}
+mysql_dbname=gitea
+mysql_username=gitea
+mysql_password=gitea123
 deployment_mode=${params.DEPLOYMENT_MODE}
 """
                     } else {
@@ -317,6 +323,10 @@ deployment_mode=${params.DEPLOYMENT_MODE}
 mysql-vm ansible_host=${env.MYSQL_VM_PRIVATE_IP} ansible_user=azureuser
 
 [all:vars]
+mysql_host=${env.MYSQL_VM_PRIVATE_IP}
+mysql_dbname=gitea
+mysql_username=gitea
+mysql_password=gitea123
 deployment_mode=${params.DEPLOYMENT_MODE}
 """
                     }
