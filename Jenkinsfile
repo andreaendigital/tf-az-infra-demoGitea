@@ -60,7 +60,6 @@ pipeline {
                         echo "    Uses: Existing MySQL VM with replicated data"
                         echo "    ⚠️  Assumes MySQL VM already exists"
                     }
-                    }
                 }
             }
         }
