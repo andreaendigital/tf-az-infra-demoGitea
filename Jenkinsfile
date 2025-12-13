@@ -287,7 +287,7 @@ pipeline {
 gitea-vm ansible_host=${env.VM_PUBLIC_IP} ansible_user=azureuser
 
 [mysql]
-mysql-vm ansible_host=${env.MYSQL_VM_PRIVATE_IP} ansible_user=azureuser ansible_ssh_common_args='-o ProxyCommand="ssh -W %h:%p -o StrictHostKeyChecking=no -q azureuser@${env.VM_PUBLIC_IP}"'
+mysql-vm ansible_host=${env.MYSQL_VM_PRIVATE_IP} ansible_user=azureuser ansible_ssh_common_args='-o ProxyCommand="ssh -W %h:%p -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -q azureuser@${env.VM_PUBLIC_IP}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
 
 [all:vars]
 mysql_host=${env.MYSQL_VM_PRIVATE_IP}
@@ -373,6 +373,7 @@ deployment_mode=${params.DEPLOYMENT_MODE}
                             
                             # Run Ansible playbook with all MySQL credentials from Jenkins secrets
                             # No hardcoded credentials - all injected from Jenkins Credentials store
+                            # Note: Do NOT override ansible_ssh_common_args - it contains ProxyJump config in inventory
                             ansible-playbook -i ${WORKSPACE}/${INVENTORY_FILE} playbook.yml \
                                 --extra-vars "mysql_root_password=${MYSQL_ROOT_PASSWORD}" \
                                 --extra-vars "mysql_dbname=${MYSQL_DBNAME}" \
