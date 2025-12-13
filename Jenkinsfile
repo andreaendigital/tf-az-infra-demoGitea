@@ -292,6 +292,7 @@ mysql-vm ansible_host=${env.MYSQL_VM_PRIVATE_IP} ansible_user=azureuser ansible_
 [all:vars]
 mysql_host=${env.MYSQL_VM_PRIVATE_IP}
 deployment_mode=${params.DEPLOYMENT_MODE}
+# Note: mysql_dbname, mysql_username, mysql_password passed via --extra-vars from Jenkins secrets
 """
                     } else if (params.DEPLOYMENT_MODE == 'failover') {
                         // Failover: only Gitea, MySQL already exists
@@ -305,6 +306,7 @@ gitea-vm ansible_host=${env.VM_PUBLIC_IP} ansible_user=azureuser
 [all:vars]
 mysql_host=${env.MYSQL_VM_PRIVATE_IP}
 deployment_mode=${params.DEPLOYMENT_MODE}
+# Note: mysql_dbname, mysql_username, mysql_password passed via --extra-vars from Jenkins secrets
 """
                     } else {
                         // replica-only: only MySQL (accessed via private IP, requires VPN or peering)
@@ -317,7 +319,9 @@ deployment_mode=${params.DEPLOYMENT_MODE}
 mysql-vm ansible_host=${env.MYSQL_VM_PRIVATE_IP} ansible_user=azureuser
 
 [all:vars]
+mysql_host=${env.MYSQL_VM_PRIVATE_IP}
 deployment_mode=${params.DEPLOYMENT_MODE}
+# Note: mysql_dbname, mysql_username, mysql_password passed via --extra-vars from Jenkins secrets
 """
                     }
                     
@@ -358,16 +362,23 @@ deployment_mode=${params.DEPLOYMENT_MODE}
             steps {
                 echo '🎭 Running Ansible playbook to deploy Gitea...'
                 withCredentials([
-                    string(credentialsId: 'mysql-admin-password', variable: 'MYSQL_ROOT_PASSWORD')
+                    string(credentialsId: 'mysql-admin-password', variable: 'MYSQL_ROOT_PASSWORD'),
+                    string(credentialsId: 'mysql-gitea-dbname', variable: 'MYSQL_DBNAME'),
+                    string(credentialsId: 'mysql-gitea-username', variable: 'MYSQL_USERNAME'),
+                    string(credentialsId: 'mysql-gitea-password', variable: 'MYSQL_PASSWORD')
                 ]) {
                     sshagent(credentials: ['azure-ssh-key']) {
                         sh """
                             cd ${ANSIBLE_DIR}
                             
-                            # Run Ansible playbook with deployment mode and MySQL password
+                            # Run Ansible playbook with all MySQL credentials from Jenkins secrets
+                            # No hardcoded credentials - all injected from Jenkins Credentials store
                             # Note: Do NOT override ansible_ssh_common_args - it contains ProxyJump config in inventory
                             ansible-playbook -i ${WORKSPACE}/${INVENTORY_FILE} playbook.yml \
                                 --extra-vars "mysql_root_password=${MYSQL_ROOT_PASSWORD}" \
+                                --extra-vars "mysql_dbname=${MYSQL_DBNAME}" \
+                                --extra-vars "mysql_username=${MYSQL_USERNAME}" \
+                                --extra-vars "mysql_password=${MYSQL_PASSWORD}" \
                                 --extra-vars "deployment_mode=${params.DEPLOYMENT_MODE}" \
                                 -v
                         """
