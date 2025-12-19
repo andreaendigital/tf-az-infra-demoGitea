@@ -10,6 +10,7 @@ import requests
 import smtplib
 import random
 import json
+import time
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
@@ -116,6 +117,11 @@ def perform_health_check(correlation_id: str) -> HealthCheckResult:
             return HealthCheckResult(False, error_msg, None, attempt)
             
         logging.warning(f"[{correlation_id}] Attempt {attempt} failed: {error_msg}")
+        
+        # Wait 30 seconds before next retry
+        if attempt < config.retry_attempts:
+            logging.info(f"[{correlation_id}] Waiting 30 seconds before retry...")
+            time.sleep(30)
     
     return HealthCheckResult(False, "All retry attempts exhausted", None, config.retry_attempts)
 
