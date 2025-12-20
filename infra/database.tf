@@ -3,8 +3,25 @@
 # Compute - Linux VM for MySQL
 # ====================================
 
-# Note: MySQL VM does not have a public IP
+# Note: MySQL VM does not have a public IP in full-stack/failover modes
 # Access is via SSH jump host through Gitea VM for security and quota optimization
+# In replica-only mode, a temporary public IP is assigned for Ansible configuration
+
+# Public IP for MySQL VM (only in replica-only mode for Ansible setup)
+resource "azurerm_public_ip" "mysql" {
+  count               = var.deployment_mode == "replica-only" ? 1 : 0
+  name                = "pip-mysql-${var.project_name}-${var.environment}"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.main.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+
+  tags = merge(var.tags, {
+    environment = var.environment
+    component   = "database"
+    note        = "Temporary public IP for Ansible setup in replica-only mode"
+  })
+}
 
 resource "azurerm_network_interface" "mysql" {
 	name                = "nic-mysql-${var.project_name}-${var.environment}"
@@ -15,7 +32,8 @@ resource "azurerm_network_interface" "mysql" {
 		name                          = "internal"
 		subnet_id                     = azurerm_subnet.database.id
 		private_ip_address_allocation = "Dynamic"
-		# No public IP - access via jump host through Gitea VM
+		# Conditional public IP for replica-only mode
+		public_ip_address_id          = var.deployment_mode == "replica-only" ? azurerm_public_ip.mysql[0].id : null
 	}
 
 	tags = merge(var.tags, {
