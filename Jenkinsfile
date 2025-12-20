@@ -532,37 +532,18 @@ deployment_mode=${params.DEPLOYMENT_MODE}
                             echo "Public IP: ${PIP_NAME}"
                             echo "════════════════════════════════════════"
                             
-                            # Get NIC ID
-                            NIC_ID=$(az network nic show \
+                            # Always try to disassociate public IP first (ignore errors if already disassociated)
+                            echo "🔓 Disassociating public IP from NIC (if associated)..."
+                            az network nic ip-config update \
                               --resource-group ${RG_NAME} \
-                              --name ${NIC_NAME} \
-                              --query 'id' -o tsv)
+                              --nic-name ${NIC_NAME} \
+                              --name internal \
+                              --remove publicIpAddress 2>/dev/null || echo "ℹ️  Public IP already disassociated or not found"
                             
-                            # Get current public IP configuration
-                            PIP_ID=$(az network nic show \
-                              --resource-group ${RG_NAME} \
-                              --name ${NIC_NAME} \
-                              --query 'ipConfigurations[0].publicIpAddress.id' -o tsv)
+                            echo "✅ Disassociation completed"
+                            sleep 5
                             
-                            # Check if public IP is associated with NIC
-                            if [ -n "$PIP_ID" ] && [ "$PIP_ID" != "null" ]; then
-                                echo "📌 Public IP associated with NIC: $PIP_ID"
-                                echo "🔓 Disassociating public IP from NIC..."
-                                
-                                # Update NIC to remove public IP
-                                az network nic ip-config update \
-                                  --resource-group ${RG_NAME} \
-                                  --nic-name ${NIC_NAME} \
-                                  --name internal \
-                                  --remove publicIpAddress
-                                
-                                echo "✅ Public IP disassociated from NIC"
-                                sleep 5
-                            else
-                                echo "ℹ️  No public IP associated with NIC"
-                            fi
-                            
-                            # Check if public IP resource exists (even if not associated)
+                            # Check if public IP resource exists and delete it
                             echo "🔍 Checking if public IP resource exists..."
                             if az network public-ip show \
                               --resource-group ${RG_NAME} \
