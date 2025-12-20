@@ -66,6 +66,11 @@ output "mysql_vm_private_ip" {
   value       = azurerm_network_interface.mysql.private_ip_address
 }
 
+output "mysql_vm_public_ip" {
+  description = "Public IP address of the MySQL VM (replica-only mode only, for Ansible setup)"
+  value       = var.deployment_mode == "replica-only" ? azurerm_public_ip.mysql[0].ip_address : null
+}
+
 # ====================================
 # Load Balancer Outputs
 # ====================================
