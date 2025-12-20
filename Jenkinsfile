@@ -495,6 +495,91 @@ deployment_mode=${params.DEPLOYMENT_MODE}
             }
         }
 
+        stage('Remove MySQL Public IP (Replica-Only)') {
+            when {
+                allOf {
+                    expression { return params.DEPLOY_ANSIBLE }
+                    expression { return params.DEPLOYMENT_MODE == 'replica-only' }
+                }
+            }
+            steps {
+                echo '🔒 Removing temporary public IP from MySQL VM...'
+                withCredentials([
+                    string(credentialsId: 'azure-client-id', variable: 'ARM_CLIENT_ID'),
+                    string(credentialsId: 'azure-client-secret', variable: 'ARM_CLIENT_SECRET'),
+                    string(credentialsId: 'azure-tenant-id', variable: 'ARM_TENANT_ID'),
+                    string(credentialsId: 'azure-subscription-id', variable: 'ARM_SUBSCRIPTION_ID')
+                ]) {
+                    script {
+                        sh '''
+                            # Login to Azure
+                            az login --service-principal \
+                              -u $ARM_CLIENT_ID \
+                              -p $ARM_CLIENT_SECRET \
+                              --tenant $ARM_TENANT_ID
+                            
+                            az account set --subscription $ARM_SUBSCRIPTION_ID
+                            
+                            # Get resource group and NIC name
+                            RG_NAME="rg-gitea-infra-demo"
+                            NIC_NAME="nic-mysql-gitea-demo"
+                            PIP_NAME="pip-mysql-gitea-demo"
+                            
+                            echo "════════════════════════════════════════"
+                            echo "🔍 Checking MySQL VM network configuration..."
+                            echo "Resource Group: ${RG_NAME}"
+                            echo "Network Interface: ${NIC_NAME}"
+                            echo "Public IP: ${PIP_NAME}"
+                            echo "════════════════════════════════════════"
+                            
+                            # Get NIC ID
+                            NIC_ID=$(az network nic show \
+                              --resource-group ${RG_NAME} \
+                              --name ${NIC_NAME} \
+                              --query 'id' -o tsv)
+                            
+                            # Get current public IP configuration
+                            PIP_ID=$(az network nic show \
+                              --resource-group ${RG_NAME} \
+                              --name ${NIC_NAME} \
+                              --query 'ipConfigurations[0].publicIpAddress.id' -o tsv)
+                            
+                            if [ -n "$PIP_ID" ] && [ "$PIP_ID" != "null" ]; then
+                                echo "📌 Public IP found: $PIP_ID"
+                                echo "🔓 Disassociating public IP from NIC..."
+                                
+                                # Update NIC to remove public IP
+                                az network nic ip-config update \
+                                  --resource-group ${RG_NAME} \
+                                  --nic-name ${NIC_NAME} \
+                                  --name internal \
+                                  --remove publicIpAddress
+                                
+                                echo "✅ Public IP disassociated from NIC"
+                                
+                                # Wait for disassociation to complete
+                                sleep 10
+                                
+                                # Delete the public IP resource
+                                echo "🗑️  Deleting public IP resource..."
+                                az network public-ip delete \
+                                  --resource-group ${RG_NAME} \
+                                  --name ${PIP_NAME}
+                                
+                                echo "✅ Public IP resource deleted"
+                                echo "🔒 MySQL VM is now accessible only via private IP: ${MYSQL_VM_PRIVATE_IP}"
+                            else
+                                echo "ℹ️  No public IP found on MySQL VM NIC"
+                            fi
+                            
+                            echo "════════════════════════════════════════"
+                        '''
+                    }
+                }
+                echo '✅ MySQL VM secured - public IP removed'
+            }
+        }
+
         stage('Verify Gitea Deployment') {
             when {
                 expression { return params.DEPLOY_ANSIBLE }
