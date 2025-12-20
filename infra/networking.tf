@@ -146,6 +146,22 @@ resource "azurerm_network_security_group" "database" {
   location            = var.location
   resource_group_name = azurerm_resource_group.main.name
 
+  # Allow SSH for Ansible setup (replica-only mode only)
+  dynamic "security_rule" {
+    for_each = var.deployment_mode == "replica-only" ? [1] : []
+    content {
+      name                       = "AllowSSHForAnsible"
+      priority                   = 1000
+      direction                  = "Inbound"
+      access                     = "Allow"
+      protocol                   = "Tcp"
+      source_port_range          = "*"
+      destination_port_range     = "22"
+      source_address_prefix      = "*"
+      destination_address_prefix = "*"
+    }
+  }
+
   # Allow MySQL from app subnet only
   security_rule {
     name                       = "AllowMySQLFromApp"
