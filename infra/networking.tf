@@ -21,7 +21,14 @@ resource "azurerm_subnet" "app" {
   resource_group_name  = azurerm_resource_group.main.name
   virtual_network_name = azurerm_virtual_network.main.name
   address_prefixes     = [var.subnet_app_address_prefix]
-}
+  # Wait for VPN Gateway to complete to avoid concurrent operation conflicts
+  depends_on = [azurerm_virtual_network_gateway.main]
+
+  timeouts {
+    create = "90m"
+    update = "90m"
+    delete = "30m"
+  }}
 
 # Subnet for Database
 resource "azurerm_subnet" "database" {
@@ -30,7 +37,14 @@ resource "azurerm_subnet" "database" {
   virtual_network_name = azurerm_virtual_network.main.name
   address_prefixes     = [var.subnet_database_address_prefix]
 
-  
+  # Wait for VPN Gateway to complete to avoid concurrent operation conflicts
+  depends_on = [azurerm_virtual_network_gateway.main]
+
+  timeouts {
+    create = "90m"
+    update = "90m"
+    delete = "30m"
+  }
 }
 
 # Subnet for VPN Gateway
@@ -39,6 +53,12 @@ resource "azurerm_subnet" "gateway" {
   resource_group_name  = azurerm_resource_group.main.name
   virtual_network_name = azurerm_virtual_network.main.name
   address_prefixes     = [var.subnet_gateway_address_prefix]
+
+  timeouts {
+    create = "90m"
+    update = "90m"
+    delete = "30m"
+  }
 }
 
 # Network Security Group for Application Subnet
