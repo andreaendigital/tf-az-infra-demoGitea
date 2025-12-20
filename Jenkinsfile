@@ -582,7 +582,9 @@ deployment_mode=${params.DEPLOYMENT_MODE}
 
         stage('Verify Gitea Deployment') {
             when {
-                expression { return params.DEPLOY_ANSIBLE }
+                expression { 
+                    return params.DEPLOY_ANSIBLE && params.DEPLOYMENT_MODE != 'replica-only'
+                }
             }
             steps {
                 echo '🔍 Verifying Gitea is running...'
