@@ -468,28 +468,64 @@ deployment_mode=${params.DEPLOYMENT_MODE}
             }
             steps {
                 echo '🎭 Running Ansible playbook to deploy Gitea...'
-                withCredentials([
-                    string(credentialsId: 'mysql-admin-password', variable: 'MYSQL_ROOT_PASSWORD'),
-                    string(credentialsId: 'mysql-gitea-dbname', variable: 'MYSQL_DBNAME'),
-                    string(credentialsId: 'mysql-gitea-username', variable: 'MYSQL_USERNAME'),
-                    string(credentialsId: 'mysql-gitea-password', variable: 'MYSQL_PASSWORD')
-                ]) {
-                    sshagent(credentials: ['azure-ssh-key']) {
-                        sh """
-                            cd ${ANSIBLE_DIR}
-                            
-                            # Run Ansible playbook with all MySQL credentials from Jenkins secrets
-                            # No hardcoded credentials - all injected from Jenkins Credentials store
-                            # Note: Do NOT override ansible_ssh_common_args - it contains ProxyJump config in inventory
-                            # Variable mapping: Jenkins credentials → Ansible role variables
-                            ansible-playbook -i ${WORKSPACE}/${INVENTORY_FILE} playbook.yml \
-                                --extra-vars "mysql_root_password=${MYSQL_ROOT_PASSWORD}" \
-                                --extra-vars "gitea_db_name=${MYSQL_DBNAME}" \
-                                --extra-vars "gitea_db_user=${MYSQL_USERNAME}" \
-                                --extra-vars "gitea_db_password=${MYSQL_PASSWORD}" \
-                                --extra-vars "deployment_mode=${params.DEPLOYMENT_MODE}" \
-                                -v
-                        """
+                script {
+                    if (params.DEPLOYMENT_MODE == 'replica-only') {
+                        // Replica-only mode: pass AWS RDS credentials + replica variables
+                        withCredentials([
+                            string(credentialsId: 'mysql-admin-password', variable: 'MYSQL_ROOT_PASSWORD'),
+                            string(credentialsId: 'mysql-gitea-dbname', variable: 'MYSQL_DBNAME'),
+                            string(credentialsId: 'mysql-gitea-username', variable: 'MYSQL_USERNAME'),
+                            string(credentialsId: 'mysql-gitea-password', variable: 'MYSQL_PASSWORD'),
+                            string(credentialsId: 'aws-rds-endpoint', variable: 'AWS_RDS_ENDPOINT'),
+                            string(credentialsId: 'aws-replication-user', variable: 'AWS_REPL_USER'),
+                            string(credentialsId: 'aws-replication-password', variable: 'AWS_REPL_PASSWORD')
+                        ]) {
+                            sshagent(credentials: ['azure-ssh-key']) {
+                                sh """
+                                    cd ${ANSIBLE_DIR}
+                                    
+                                    # Run Ansible playbook with AWS RDS replication credentials
+                                    # mysql-replica role variables: gitea_replica_db, gitea_replica_user, gitea_replica_password
+                                    # AWS RDS replication: aws_rds_endpoint, aws_replication_user, aws_replication_password
+                                    ansible-playbook -i ${WORKSPACE}/${INVENTORY_FILE} playbook.yml \
+                                        --extra-vars "mysql_root_password=${MYSQL_ROOT_PASSWORD}" \
+                                        --extra-vars "gitea_replica_db=${MYSQL_DBNAME}" \
+                                        --extra-vars "gitea_replica_user=${MYSQL_USERNAME}" \
+                                        --extra-vars "gitea_replica_password=${MYSQL_PASSWORD}" \
+                                        --extra-vars "aws_rds_endpoint=${AWS_RDS_ENDPOINT}" \
+                                        --extra-vars "aws_replication_user=${AWS_REPL_USER}" \
+                                        --extra-vars "aws_replication_password=${AWS_REPL_PASSWORD}" \
+                                        --extra-vars "deployment_mode=${params.DEPLOYMENT_MODE}" \
+                                        -v
+                                """
+                            }
+                        }
+                    } else {
+                        // Full-stack or failover mode: standard gitea variables
+                        withCredentials([
+                            string(credentialsId: 'mysql-admin-password', variable: 'MYSQL_ROOT_PASSWORD'),
+                            string(credentialsId: 'mysql-gitea-dbname', variable: 'MYSQL_DBNAME'),
+                            string(credentialsId: 'mysql-gitea-username', variable: 'MYSQL_USERNAME'),
+                            string(credentialsId: 'mysql-gitea-password', variable: 'MYSQL_PASSWORD')
+                        ]) {
+                            sshagent(credentials: ['azure-ssh-key']) {
+                                sh """
+                                    cd ${ANSIBLE_DIR}
+                                    
+                                    # Run Ansible playbook with all MySQL credentials from Jenkins secrets
+                                    # No hardcoded credentials - all injected from Jenkins Credentials store
+                                    # Note: Do NOT override ansible_ssh_common_args - it contains ProxyJump config in inventory
+                                    # Variable mapping: Jenkins credentials → Ansible role variables
+                                    ansible-playbook -i ${WORKSPACE}/${INVENTORY_FILE} playbook.yml \
+                                        --extra-vars "mysql_root_password=${MYSQL_ROOT_PASSWORD}" \
+                                        --extra-vars "gitea_db_name=${MYSQL_DBNAME}" \
+                                        --extra-vars "gitea_db_user=${MYSQL_USERNAME}" \
+                                        --extra-vars "gitea_db_password=${MYSQL_PASSWORD}" \
+                                        --extra-vars "deployment_mode=${params.DEPLOYMENT_MODE}" \
+                                        -v
+                                """
+                            }
+                        }
                     }
                 }
                 echo '✅ Ansible deployment completed'
