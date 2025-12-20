@@ -217,7 +217,8 @@ pipeline {
                     string(credentialsId: 'azure-tenant-id', variable: 'ARM_TENANT_ID'),
                     string(credentialsId: 'azure-subscription-id', variable: 'ARM_SUBSCRIPTION_ID'),
                     string(credentialsId: 'azure-ssh-public-key', variable: 'TF_VAR_ssh_public_key'),
-                    string(credentialsId: 'vpn-shared-key', variable: 'TF_VAR_vpn_shared_key')
+                    string(credentialsId: 'vpn-shared-key', variable: 'TF_VAR_vpn_shared_key'),
+                    string(credentialsId: 'aws-vpn-tunnel-ip', variable: 'TF_VAR_aws_vpn_gateway_ip')
                 ]) {
                     dir("${TF_DIR}") {
                         sh '''
@@ -242,7 +243,8 @@ pipeline {
                     string(credentialsId: 'azure-tenant-id', variable: 'ARM_TENANT_ID'),
                     string(credentialsId: 'azure-subscription-id', variable: 'ARM_SUBSCRIPTION_ID'),
                     string(credentialsId: 'azure-ssh-public-key', variable: 'TF_VAR_ssh_public_key'),
-                    string(credentialsId: 'vpn-shared-key', variable: 'TF_VAR_vpn_shared_key')
+                    string(credentialsId: 'vpn-shared-key', variable: 'TF_VAR_vpn_shared_key'),
+                    string(credentialsId: 'aws-vpn-tunnel-ip', variable: 'TF_VAR_aws_vpn_gateway_ip')
                 ]) {
                     dir("${TF_DIR}") {
                         sh """
@@ -269,7 +271,8 @@ pipeline {
                         string(credentialsId: 'azure-tenant-id', variable: 'ARM_TENANT_ID'),
                         string(credentialsId: 'azure-subscription-id', variable: 'ARM_SUBSCRIPTION_ID'),
                         string(credentialsId: 'azure-ssh-public-key', variable: 'TF_VAR_ssh_public_key'),
-                        string(credentialsId: 'vpn-shared-key', variable: 'TF_VAR_vpn_shared_key')
+                        string(credentialsId: 'vpn-shared-key', variable: 'TF_VAR_vpn_shared_key'),
+                        string(credentialsId: 'aws-vpn-tunnel-ip', variable: 'TF_VAR_aws_vpn_gateway_ip')
                     ]) {
                         dir("${TF_DIR}") {
                             sh '''
@@ -665,7 +668,8 @@ deployment_mode=${params.DEPLOYMENT_MODE}
                         string(credentialsId: 'azure-tenant-id', variable: 'ARM_TENANT_ID'),
                         string(credentialsId: 'azure-subscription-id', variable: 'ARM_SUBSCRIPTION_ID'),
                         string(credentialsId: 'azure-ssh-public-key', variable: 'TF_VAR_ssh_public_key'),
-                        string(credentialsId: 'vpn-shared-key', variable: 'TF_VAR_vpn_shared_key')
+                        string(credentialsId: 'vpn-shared-key', variable: 'TF_VAR_vpn_shared_key'),
+                        string(credentialsId: 'aws-vpn-tunnel-ip', variable: 'TF_VAR_aws_vpn_gateway_ip')
                     ]) {
                         dir("${TF_DIR}") {
                             sh 'terraform destroy -auto-approve'
