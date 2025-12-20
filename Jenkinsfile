@@ -544,8 +544,9 @@ deployment_mode=${params.DEPLOYMENT_MODE}
                               --name ${NIC_NAME} \
                               --query 'ipConfigurations[0].publicIpAddress.id' -o tsv)
                             
+                            # Check if public IP is associated with NIC
                             if [ -n "$PIP_ID" ] && [ "$PIP_ID" != "null" ]; then
-                                echo "📌 Public IP found: $PIP_ID"
+                                echo "📌 Public IP associated with NIC: $PIP_ID"
                                 echo "🔓 Disassociating public IP from NIC..."
                                 
                                 # Update NIC to remove public IP
@@ -556,11 +557,18 @@ deployment_mode=${params.DEPLOYMENT_MODE}
                                   --remove publicIpAddress
                                 
                                 echo "✅ Public IP disassociated from NIC"
+                                sleep 5
+                            else
+                                echo "ℹ️  No public IP associated with NIC"
+                            fi
+                            
+                            # Check if public IP resource exists (even if not associated)
+                            echo "🔍 Checking if public IP resource exists..."
+                            if az network public-ip show \
+                              --resource-group ${RG_NAME} \
+                              --name ${PIP_NAME} &>/dev/null; then
                                 
-                                # Wait for disassociation to complete
-                                sleep 10
-                                
-                                # Delete the public IP resource
+                                echo "📌 Public IP resource found: ${PIP_NAME}"
                                 echo "🗑️  Deleting public IP resource..."
                                 az network public-ip delete \
                                   --resource-group ${RG_NAME} \
@@ -569,7 +577,7 @@ deployment_mode=${params.DEPLOYMENT_MODE}
                                 echo "✅ Public IP resource deleted"
                                 echo "🔒 MySQL VM is now accessible only via private IP: ${MYSQL_VM_PRIVATE_IP}"
                             else
-                                echo "ℹ️  No public IP found on MySQL VM NIC"
+                                echo "ℹ️  Public IP resource does not exist"
                             fi
                             
                             echo "════════════════════════════════════════"
