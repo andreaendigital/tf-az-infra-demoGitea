@@ -522,8 +522,8 @@ deployment_mode=${params.DEPLOYMENT_MODE}
                             
                             # Get resource group and NIC name
                             RG_NAME="rg-gitea-infra-demo"
-                            NIC_NAME="nic-mysql-gitea-demo"
-                            PIP_NAME="pip-mysql-gitea-demo"
+                            NIC_NAME="nic-mysql-gitea-infra-demo"
+                            PIP_NAME="pip-mysql-gitea-infra-demo"
                             
                             echo "════════════════════════════════════════"
                             echo "🔍 Checking MySQL VM network configuration..."
