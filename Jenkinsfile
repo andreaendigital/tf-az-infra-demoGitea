@@ -366,6 +366,7 @@ gitea-vm ansible_host=${env.VM_PUBLIC_IP} ansible_user=azureuser
 mysql-vm ansible_host=${env.MYSQL_VM_PRIVATE_IP} ansible_user=azureuser ansible_ssh_common_args='-o ProxyCommand="ssh -W %h:%p -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -q azureuser@${env.VM_PUBLIC_IP}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
 
 [all:vars]
+ansible_python_interpreter=/usr/bin/python3
 mysql_host=${env.MYSQL_VM_PRIVATE_IP}
 deployment_mode=${params.DEPLOYMENT_MODE}
 # Note: mysql_dbname, mysql_username, mysql_password passed via --extra-vars from Jenkins secrets
@@ -380,6 +381,7 @@ deployment_mode=${params.DEPLOYMENT_MODE}
 gitea-vm ansible_host=${env.VM_PUBLIC_IP} ansible_user=azureuser
 
 [all:vars]
+ansible_python_interpreter=/usr/bin/python3
 mysql_host=${env.MYSQL_VM_PRIVATE_IP}
 deployment_mode=${params.DEPLOYMENT_MODE}
 # Note: mysql_dbname, mysql_username, mysql_password passed via --extra-vars from Jenkins secrets
@@ -395,6 +397,7 @@ deployment_mode=${params.DEPLOYMENT_MODE}
 mysql-vm ansible_host=${env.MYSQL_VM_PUBLIC_IP} ansible_user=azureuser
 
 [all:vars]
+ansible_python_interpreter=/usr/bin/python3
 mysql_host=${env.MYSQL_VM_PRIVATE_IP}
 deployment_mode=${params.DEPLOYMENT_MODE}
 # Note: mysql_dbname, mysql_username, mysql_password passed via --extra-vars from Jenkins secrets
