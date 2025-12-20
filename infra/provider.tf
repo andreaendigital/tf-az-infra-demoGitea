@@ -7,6 +7,15 @@ terraform {
       version = "~> 3.75.0"
     }
   }
+
+  # Backend configuration for remote state
+  # Prevents state loss when Jenkins workspace is cleaned
+  backend "azurerm" {
+    resource_group_name  = "rg-terraform-state"
+    storage_account_name = "tfstateazgitea"
+    container_name       = "tfstate"
+    key                  = "gitea-azure-infra.tfstate"
+  }
 }
 
 provider "azurerm" {
