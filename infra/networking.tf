@@ -111,6 +111,12 @@ resource "azurerm_network_security_group" "app" {
 resource "azurerm_subnet_network_security_group_association" "app" {
   subnet_id                 = azurerm_subnet.app.id
   network_security_group_id = azurerm_network_security_group.app.id
+
+  timeouts {
+    create = "60m"
+    update = "60m"
+    delete = "30m"
+  }
 }
 
 # Network Security Group for Database Subnet
@@ -157,6 +163,12 @@ resource "azurerm_network_security_group" "database" {
 resource "azurerm_subnet_network_security_group_association" "database" {
   subnet_id                 = azurerm_subnet.database.id
   network_security_group_id = azurerm_network_security_group.database.id
+
+  timeouts {
+    create = "90m"
+    update = "90m"
+    delete = "40m"
+  }
 }
 
 # Public IP for VPN Gateway
