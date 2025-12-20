@@ -28,7 +28,8 @@ resource "azurerm_subnet" "app" {
     create = "90m"
     update = "90m"
     delete = "30m"
-  }}
+  }
+}
 
 # Subnet for Database
 resource "azurerm_subnet" "database" {
