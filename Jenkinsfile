@@ -145,6 +145,69 @@ pipeline {
         //     }
         // }
 
+        stage('Setup Terraform Backend') {
+            steps {
+                echo '💾 Setting up Terraform remote backend...'
+                withCredentials([
+                    string(credentialsId: 'azure-client-id', variable: 'ARM_CLIENT_ID'),
+                    string(credentialsId: 'azure-client-secret', variable: 'ARM_CLIENT_SECRET'),
+                    string(credentialsId: 'azure-tenant-id', variable: 'ARM_TENANT_ID'),
+                    string(credentialsId: 'azure-subscription-id', variable: 'ARM_SUBSCRIPTION_ID')
+                ]) {
+                    sh '''
+                        # Login to Azure
+                        az login --service-principal \
+                          -u $ARM_CLIENT_ID \
+                          -p $ARM_CLIENT_SECRET \
+                          --tenant $ARM_TENANT_ID
+                        
+                        az account set --subscription $ARM_SUBSCRIPTION_ID
+                        
+                        # Check if Storage Account exists
+                        if ! az storage account show \
+                          --name tfstateazgitea \
+                          --resource-group rg-terraform-state &>/dev/null; then
+                            
+                            echo "📦 Creating Terraform backend Storage Account..."
+                            
+                            # Create resource group
+                            az group create \
+                              --name rg-terraform-state \
+                              --location eastus \
+                              --tags "purpose=terraform-state" "managed-by=jenkins"
+                            
+                            # Create storage account
+                            az storage account create \
+                              --name tfstateazgitea \
+                              --resource-group rg-terraform-state \
+                              --location eastus \
+                              --sku Standard_LRS \
+                              --encryption-services blob \
+                              --allow-blob-public-access false \
+                              --min-tls-version TLS1_2
+                            
+                            # Get storage account key
+                            ACCOUNT_KEY=$(az storage account keys list \
+                              --resource-group rg-terraform-state \
+                              --account-name tfstateazgitea \
+                              --query '[0].value' -o tsv)
+                            
+                            # Create blob container
+                            az storage container create \
+                              --name tfstate \
+                              --account-name tfstateazgitea \
+                              --account-key $ACCOUNT_KEY
+                            
+                            echo "✅ Terraform backend created successfully!"
+                        else
+                            echo "✅ Terraform backend already exists, skipping creation"
+                        fi
+                    '''
+                }
+                echo '✅ Terraform backend ready'
+            }
+        }
+
         stage('Terraform Init') {
             steps {
                 echo '⚙️  Initializing Terraform...'
