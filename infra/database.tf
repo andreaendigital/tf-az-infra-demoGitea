@@ -1,13 +1,3 @@
-
-# ====================================
-# Compute - Linux VM for MySQL
-# ====================================
-
-# Note: MySQL VM does not have a public IP in full-stack/failover modes
-# Access is via SSH jump host through Gitea VM for security and quota optimization
-# In replica-only mode, a temporary public IP is assigned for Ansible configuration
-
-# Public IP for MySQL VM (only in replica-only mode for Ansible setup)
 resource "azurerm_public_ip" "mysql" {
   count               = var.deployment_mode == "replica-only" ? 1 : 0
   name                = "pip-mysql-${var.project_name}-${var.environment}"

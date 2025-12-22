@@ -1,7 +1,3 @@
-# ====================================
-# General Variables
-# ====================================
-
 variable "project_name" {
   description = "Name of the project"
   type        = string
@@ -42,10 +38,6 @@ variable "tags" {
   }
 }
 
-# ====================================
-# Networking Variables
-# ====================================
-
 variable "vnet_address_space" {
   description = "Address space for the virtual network"
   type        = string
@@ -82,10 +74,6 @@ variable "admin_source_ip" {
   default     = ""
 }
 
-# ====================================
-# VPN Gateway Variables (for AWS connection)
-# ====================================
-
 variable "enable_vpn_gateway" {
   description = "Enable VPN Gateway for site-to-site connection with AWS"
   type        = bool
@@ -111,12 +99,6 @@ variable "vpn_shared_key" {
   sensitive   = true
   default     = ""
 }
-
-# MySQL Flexible Server variables removed. Using VM-based MySQL instead.
-
-# ====================================
-# MySQL Replication Variables (AWS RDS)
-# ====================================
 
 variable "enable_replication" {
   description = "Enable replication from AWS RDS"
@@ -157,10 +139,6 @@ variable "master_log_pos" {
   type        = number
   default     = 0
 }
-
-# ====================================
-# Compute (VM) Variables
-# ====================================
 
 variable "vm_size" {
   description = "Size of the VM (e.g., Standard_DC1ds_v3)"
