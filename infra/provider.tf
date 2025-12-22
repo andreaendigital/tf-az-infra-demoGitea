@@ -8,8 +8,6 @@ terraform {
     }
   }
 
-  # Backend configuration for remote state
-  # Prevents state loss when Jenkins workspace is cleaned
   backend "azurerm" {
     resource_group_name  = "rg-terraform-state"
     storage_account_name = "tfstateazgitea"

@@ -1,8 +1,3 @@
-# ====================================
-# Networking - VNet, Subnets, NSG, VPN Gateway
-# ====================================
-
-# Virtual Network
 resource "azurerm_virtual_network" "main" {
   name                = "vnet-${var.project_name}-${var.environment}"
   location            = var.location
@@ -15,13 +10,11 @@ resource "azurerm_virtual_network" "main" {
   })
 }
 
-# Subnet for Application (VM)
 resource "azurerm_subnet" "app" {
   name                 = "subnet-app-${var.environment}"
   resource_group_name  = azurerm_resource_group.main.name
   virtual_network_name = azurerm_virtual_network.main.name
   address_prefixes     = [var.subnet_app_address_prefix]
-  # Wait for VPN Gateway to complete to avoid concurrent operation conflicts
   depends_on = [azurerm_virtual_network_gateway.main]
 
   timeouts {
@@ -31,14 +24,12 @@ resource "azurerm_subnet" "app" {
   }
 }
 
-# Subnet for Database
 resource "azurerm_subnet" "database" {
   name                 = "subnet-database-${var.environment}"
   resource_group_name  = azurerm_resource_group.main.name
   virtual_network_name = azurerm_virtual_network.main.name
   address_prefixes     = [var.subnet_database_address_prefix]
 
-  # Wait for VPN Gateway to complete to avoid concurrent operation conflicts
   depends_on = [azurerm_virtual_network_gateway.main]
 
   timeouts {
@@ -48,9 +39,8 @@ resource "azurerm_subnet" "database" {
   }
 }
 
-# Subnet for VPN Gateway
 resource "azurerm_subnet" "gateway" {
-  name                 = "GatewaySubnet"  # Name MUST be GatewaySubnet
+  name                 = "GatewaySubnet"
   resource_group_name  = azurerm_resource_group.main.name
   virtual_network_name = azurerm_virtual_network.main.name
   address_prefixes     = [var.subnet_gateway_address_prefix]
@@ -62,13 +52,11 @@ resource "azurerm_subnet" "gateway" {
   }
 }
 
-# Network Security Group for Application Subnet
 resource "azurerm_network_security_group" "app" {
   name                = "nsg-app-${var.project_name}-${var.environment}"
   location            = var.location
   resource_group_name = azurerm_resource_group.main.name
 
-  # SSH access (restricted to specific IPs if provided)
   dynamic "security_rule" {
     for_each = length(var.allowed_ssh_ips) > 0 ? var.allowed_ssh_ips : (var.admin_source_ip != "" ? [var.admin_source_ip] : ["*"])
     content {
@@ -84,7 +72,6 @@ resource "azurerm_network_security_group" "app" {
     }
   }
 
-  # HTTP for Gitea web interface
   security_rule {
     name                       = "AllowHTTP"
     priority                   = 1002
@@ -97,7 +84,6 @@ resource "azurerm_network_security_group" "app" {
     destination_address_prefix = "*"
   }
 
-  # Gitea web port (3000)
   security_rule {
     name                       = "AllowGiteaWeb"
     priority                   = 1003
@@ -110,7 +96,6 @@ resource "azurerm_network_security_group" "app" {
     destination_address_prefix = "*"
   }
 
-  # Allow communication with database subnet
   security_rule {
     name                       = "AllowDatabaseSubnet"
     priority                   = 1004
@@ -128,7 +113,6 @@ resource "azurerm_network_security_group" "app" {
   })
 }
 
-# Associate NSG with App Subnet
 resource "azurerm_subnet_network_security_group_association" "app" {
   subnet_id                 = azurerm_subnet.app.id
   network_security_group_id = azurerm_network_security_group.app.id
@@ -140,13 +124,11 @@ resource "azurerm_subnet_network_security_group_association" "app" {
   }
 }
 
-# Network Security Group for Database Subnet
 resource "azurerm_network_security_group" "database" {
   name                = "nsg-database-${var.project_name}-${var.environment}"
   location            = var.location
   resource_group_name = azurerm_resource_group.main.name
 
-  # Allow SSH for Ansible setup (replica-only mode only)
   dynamic "security_rule" {
     for_each = var.deployment_mode == "replica-only" ? [1] : []
     content {
@@ -162,7 +144,6 @@ resource "azurerm_network_security_group" "database" {
     }
   }
 
-  # Allow MySQL from app subnet only
   security_rule {
     name                       = "AllowMySQLFromApp"
     priority                   = 1001
@@ -175,7 +156,6 @@ resource "azurerm_network_security_group" "database" {
     destination_address_prefix = "*"
   }
 
-  # Allow MySQL replication from AWS (if VPN is enabled)
   dynamic "security_rule" {
     for_each = var.enable_vpn_gateway && var.aws_vpc_cidr != "" ? [1] : []
     content {
@@ -196,7 +176,6 @@ resource "azurerm_network_security_group" "database" {
   })
 }
 
-# Associate NSG with Database Subnet
 resource "azurerm_subnet_network_security_group_association" "database" {
   subnet_id                 = azurerm_subnet.database.id
   network_security_group_id = azurerm_network_security_group.database.id
@@ -208,7 +187,6 @@ resource "azurerm_subnet_network_security_group_association" "database" {
   }
 }
 
-# Public IP for VPN Gateway
 resource "azurerm_public_ip" "vpn_gateway" {
   count               = var.deployment_mode == "replica-only" ? 1 : 0
   name                = "pip-vpngateway-${var.project_name}-${var.environment}"
@@ -222,7 +200,6 @@ resource "azurerm_public_ip" "vpn_gateway" {
   })
 }
 
-# VPN Gateway (only in replica-only mode)
 resource "azurerm_virtual_network_gateway" "main" {
   count               = var.deployment_mode == "replica-only" ? 1 : 0
   name                = "vpngw-${var.project_name}-${var.environment}"
@@ -248,7 +225,6 @@ resource "azurerm_virtual_network_gateway" "main" {
   })
 }
 
-# Local Network Gateway (AWS side)
 resource "azurerm_local_network_gateway" "aws" {
   count               = var.deployment_mode == "replica-only" && var.aws_vpn_gateway_ip != "" ? 1 : 0
   name                = "lng-aws-${var.environment}"
@@ -262,7 +238,6 @@ resource "azurerm_local_network_gateway" "aws" {
   })
 }
 
-# VPN Connection to AWS
 resource "azurerm_virtual_network_gateway_connection" "aws" {
   count               = var.deployment_mode == "replica-only" && var.aws_vpn_gateway_ip != "" ? 1 : 0
   name                = "vpnconn-to-aws-${var.environment}"

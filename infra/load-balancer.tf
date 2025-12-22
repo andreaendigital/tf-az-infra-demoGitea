@@ -1,9 +1,3 @@
-# ====================================
-# Load Balancer
-# ====================================
-
-# Public IP for Load Balancer
-# Only in full-stack and failover modes
 resource "azurerm_public_ip" "lb" {
   count               = var.deployment_mode != "replica-only" ? 1 : 0
   name                = "pip-lb-${var.project_name}-${var.environment}"
@@ -18,8 +12,6 @@ resource "azurerm_public_ip" "lb" {
   })
 }
 
-# Load Balancer
-# Only in full-stack and failover modes
 resource "azurerm_lb" "main" {
   count               = var.deployment_mode != "replica-only" ? 1 : 0
   name                = "lb-${var.project_name}-${var.environment}"
@@ -38,14 +30,12 @@ resource "azurerm_lb" "main" {
   })
 }
 
-# Backend Address Pool
 resource "azurerm_lb_backend_address_pool" "main" {
   count           = var.deployment_mode != "replica-only" ? 1 : 0
   loadbalancer_id = azurerm_lb.main[0].id
   name            = "GiteaBackendPool"
 }
 
-# Health Probe for Gitea (port 3000)
 resource "azurerm_lb_probe" "gitea" {
   count           = var.deployment_mode != "replica-only" ? 1 : 0
   loadbalancer_id = azurerm_lb.main[0].id
@@ -55,7 +45,6 @@ resource "azurerm_lb_probe" "gitea" {
   request_path    = "/"
 }
 
-# Load Balancer Rule for HTTP (80 -> 3000)
 resource "azurerm_lb_rule" "http" {
   count                          = var.deployment_mode != "replica-only" ? 1 : 0
   loadbalancer_id                = azurerm_lb.main[0].id
@@ -69,7 +58,6 @@ resource "azurerm_lb_rule" "http" {
   disable_outbound_snat          = false
 }
 
-# Load Balancer Rule for Gitea SSH (22)
 resource "azurerm_lb_rule" "ssh" {
   count                          = var.deployment_mode != "replica-only" ? 1 : 0
   loadbalancer_id                = azurerm_lb.main[0].id

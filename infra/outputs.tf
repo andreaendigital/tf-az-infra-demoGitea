@@ -1,7 +1,3 @@
-# ====================================
-# Resource Group Outputs
-# ====================================
-
 output "resource_group_id" {
   description = "ID of the resource group"
   value       = azurerm_resource_group.main.id
@@ -16,10 +12,6 @@ output "resource_group_location" {
   description = "Location of the resource group"
   value       = azurerm_resource_group.main.location
 }
-
-# ====================================
-# Networking Outputs
-# ====================================
 
 output "vnet_id" {
   description = "ID of the virtual network"
@@ -46,11 +38,6 @@ output "vpn_gateway_public_ip" {
   value       = var.deployment_mode == "replica-only" ? azurerm_public_ip.vpn_gateway[0].ip_address : null
 }
 
-
-# ====================================
-# Database Outputs
-# ====================================
-
 output "mysql_vm_id" {
   description = "ID of the MySQL VM"
   value       = azurerm_linux_virtual_machine.mysql.id
@@ -71,10 +58,6 @@ output "mysql_vm_public_ip" {
   value       = var.deployment_mode == "replica-only" ? azurerm_public_ip.mysql[0].ip_address : null
 }
 
-# ====================================
-# Load Balancer Outputs
-# ====================================
-
 output "load_balancer_public_ip" {
   description = "Public IP address of the load balancer (full-stack and failover)"
   value       = var.deployment_mode != "replica-only" ? azurerm_public_ip.lb[0].ip_address : null
@@ -84,10 +67,6 @@ output "gitea_url" {
   description = "URL to access Gitea application (full-stack and failover)"
   value       = var.deployment_mode != "replica-only" ? "http://${azurerm_public_ip.lb[0].ip_address}" : null
 }
-
-# ====================================
-# Compute Outputs
-# ====================================
 
 output "vm_id" {
   description = "ID of the virtual machine (full-stack and failover)"

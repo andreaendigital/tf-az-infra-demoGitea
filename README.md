@@ -1,6 +1,6 @@
 # Gitea Infrastructure on Azure - Terraform
 
-Terraform Infrastructure as Code (IaC) for deploying Gitea on Microsoft Azure with high availability, MySQL Flexible Server database, and optional VPN connectivity to AWS for failover scenarios.
+Terraform Infrastructure as Code (IaC) for deploying Gitea on Microsoft Azure with high availability, VM-based MySQL database, and optional VPN connectivity to AWS for failover scenarios.
 
 ## 🏗️ Architecture Overview
 
@@ -66,7 +66,7 @@ This repository provisions a complete Azure infrastructure for hosting Gitea wit
 - ✅ **High Availability**: Load balancer distributes traffic to VM instances
 - ✅ **Secure Networking**: Private subnets, NSGs, and VNet integration
 - ✅ **Static Public IP**: Stable IP for SSH access and Ansible automation
-- ✅ **MySQL Flexible Server**: Managed database with automated backups
+- ✅ **VM-based MySQL**: MySQL 8.0 installed on Ubuntu VM with private networking
 - ✅ **VPN Gateway Support**: Optional site-to-site connection to AWS
 - ✅ **Database Replication**: MySQL master-replica setup for failover (with AWS)
 - ✅ **Team SSH Access**: Support for multiple allowed IP addresses
@@ -79,33 +79,16 @@ This repository provisions a complete Azure infrastructure for hosting Gitea wit
 ```
 TF-AZ-INFRA-DEMOGITEA/
 ├── infra/                          # Main Terraform configuration
-│   ├── main.tf                     # Module orchestration
-│   ├── variables.tf                # Input variables
+│   ├── compute.tf                  # Virtual machines (Gitea VM + MySQL VM)
+│   ├── database.tf                 # MySQL VM configuration
+│   ├── load-balancer.tf            # Load balancer for Gitea
+│   ├── networking.tf               # VNet, Subnets, NSG, VPN Gateway
 │   ├── outputs.tf                  # Output values
 │   ├── provider.tf                 # Azure provider configuration
 │   ├── remote_backend_azurerm.tf   # Remote state configuration
+│   ├── resource-group.tf           # Resource group
+│   ├── variables.tf                # Input variables
 │   └── terraform.tfvars.example    # Example variable values
-│
-├── modules/                        # Reusable Terraform modules
-│   ├── resource-group/             # Azure Resource Group
-│   │   └── main.tf
-│   │
-│   ├── networking/                 # VNet, Subnets, NSG, VPN Gateway
-│   │   ├── main.tf
-│   │   └── outputs.tf
-│   │
-│   ├── database/                   # MySQL Flexible Server
-│   │   ├── main.tf
-│   │   └── outputs.tf
-│   │
-│   ├── compute/                    # Virtual Machine
-│   │   ├── main.tf
-│   │   ├── outputs.tf
-│   │   └── cloud-init.yaml         # VM initialization script
-│   │
-│   └── load-balancer/              # Azure Load Balancer
-│       ├── main.tf
-│       └── outputs.tf
 │
 ├── ansible/                        # Ansible inventory template
 │   ├── inventory.ini               # Static inventory with placeholders
@@ -220,9 +203,6 @@ location     = "East US"
 # SSH Access - Add your public IP (get it with: curl ifconfig.me)
 allowed_ssh_ips = ["YOUR_PUBLIC_IP/32"]
 
-# MySQL Admin Password (CHANGE THIS!)
-mysql_admin_password = "YourSecurePassword123!"
-
 # SSH Public Key
 ssh_public_key = "ssh-rsa AAAAB3NzaC1yc2EA... your-public-key"
 ```
@@ -261,10 +241,9 @@ terraform output gitea_url
 # VM Public IP (for Ansible)
 terraform output vm_public_ip
 
-# MySQL connection details
-terraform output mysql_server_host
-terraform output mysql_database_name
-terraform output mysql_admin_username
+# MySQL VM details
+terraform output mysql_vm_private_ip
+terraform output mysql_vm_public_ip
 ```
 
 #### Step 7: Configure Ansible Inventory
@@ -300,7 +279,6 @@ See [ansible-az-demoGitea](https://github.com/andreaendigital/ansible-az-demoGit
 | `environment`          | Environment name      | `demo`        | ✅       |
 | `location`             | Azure region          | `East US`     | ✅       |
 | `allowed_ssh_ips`      | IPs allowed to SSH    | `[]`          | ✅       |
-| `mysql_admin_password` | MySQL admin password  | -             | ✅       |
 | `ssh_public_key`       | SSH public key for VM | -             | ✅       |
 
 ### Networking Variables
@@ -318,16 +296,6 @@ See [ansible-az-demoGitea](https://github.com/andreaendigital/ansible-az-demoGit
 | ------------------- | ----------------- | -------------- |
 | `vm_size`           | Azure VM size     | `Standard_B2s` |
 | `vm_admin_username` | VM admin username | `azureuser`    |
-
-### Database Configuration
-
-| Variable                      | Description      | Default           |
-| ----------------------------- | ---------------- | ----------------- |
-| `mysql_admin_username`        | MySQL admin user | `gitea_admin`     |
-| `mysql_sku_name`              | MySQL tier       | `B_Standard_B1ms` |
-| `mysql_version`               | MySQL version    | `8.0.21`          |
-| `mysql_storage_size_gb`       | Storage size     | `20`              |
-| `mysql_backup_retention_days` | Backup retention | `7`               |
 
 ### VPN Gateway (Optional)
 
@@ -367,10 +335,9 @@ terraform output vm_public_ip
 terraform output vm_private_ip
 terraform output ssh_connection_string
 
-# Database
-terraform output mysql_server_host
-terraform output mysql_database_name
-terraform output mysql_admin_username
+# MySQL VM
+terraform output mysql_vm_private_ip
+terraform output mysql_vm_public_ip
 
 # Load Balancer
 terraform output load_balancer_public_ip
@@ -495,14 +462,14 @@ Approximate monthly costs (Pay-as-you-go, East US):
 
 | Resource                | SKU               | Estimated Cost      |
 | ----------------------- | ----------------- | ------------------- |
-| VM                      | Standard_B2s      | $30-40/month        |
-| MySQL Flexible Server   | B_Standard_B1ms   | $15-25/month        |
-| Load Balancer           | Basic             | $18/month           |
+| VM (Gitea)              | Standard_DC1ds_v3 | $30-40/month        |
+| VM (MySQL)              | Standard_DC1ds_v3 | $30-40/month        |
+| Load Balancer           | Standard          | $18/month           |
 | Public IPs              | 2 static IPs      | $8/month            |
 | VPN Gateway             | VpnGw1 (optional) | $140/month          |
 | Storage/Bandwidth       | Varies            | $5-10/month         |
-| **Total (without VPN)** |                   | **~$75-100/month**  |
-| **Total (with VPN)**    |                   | **~$215-250/month** |
+| **Total (without VPN)** |                   | **~$95-120/month**  |
+| **Total (with VPN)**    |                   | **~$235-260/month** |
 
 💡 **Cost optimization tips:**
 
@@ -510,81 +477,3 @@ Approximate monthly costs (Pay-as-you-go, East US):
 - Enable auto-shutdown for non-production VMs
 - Use spot instances where applicable
 - Disable VPN Gateway when not needed
-
-## 🐛 Troubleshooting
-
-### Issue: SSH connection refused
-
-**Solution:**
-
-```bash
-# Verify your IP is allowed
-curl ifconfig.me
-
-# Add your IP to allowed_ssh_ips in terraform.tfvars and re-apply
-terraform apply
-```
-
-### Issue: MySQL connection error from VM
-
-**Solution:**
-
-```bash
-# Check NSG rules allow VM → MySQL
-terraform output | grep mysql
-
-# Verify private DNS zone is configured
-az network private-dns zone list -o table
-```
-
-### Issue: VPN tunnel not connecting
-
-**Solution:**
-
-```bash
-# Verify shared key matches on both sides
-# Check BGP settings
-# Ensure gateway subnet is correct size (/27 minimum)
-
-az network vnet-gateway list -o table
-```
-
-### Issue: Terraform state locked
-
-**Solution:**
-
-```bash
-# Force unlock (use with caution!)
-terraform force-unlock LOCK_ID
-```
-
-## 📚 Additional Documentation
-
-- [Terraform Azure Provider Docs](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs)
-- [Azure MySQL Flexible Server](https://learn.microsoft.com/en-us/azure/mysql/flexible-server/)
-- [Azure VPN Gateway](https://learn.microsoft.com/en-us/azure/vpn-gateway/)
-- [Gitea Official Documentation](https://docs.gitea.com/)
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📝 License
-
-This project is licensed under the MIT License.
-
-## 👤 Author
-
-**Andrea Beltrán**
-
-- GitHub: [@andreaendigital](https://github.com/andreaendigital)
-
-## 🙏 Acknowledgments
-
-- Terraform Azure Provider team
-- Gitea community
-- DevOps best practices contributors

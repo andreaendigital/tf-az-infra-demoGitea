@@ -1,9 +1,3 @@
-# ====================================
-# Compute - Linux VM for Gitea
-# ====================================
-
-# Public IP for VM (Static allocation for stable SSH access)
-# Only created in full-stack and failover modes
 resource "azurerm_public_ip" "vm" {
   count               = var.deployment_mode != "replica-only" ? 1 : 0
   name                = "pip-vm-${var.project_name}-${var.environment}"
@@ -19,8 +13,6 @@ resource "azurerm_public_ip" "vm" {
   })
 }
 
-# Network Interface
-# Only created in full-stack and failover modes
 resource "azurerm_network_interface" "main" {
   count               = var.deployment_mode != "replica-only" ? 1 : 0
   name                = "nic-${var.project_name}-${var.environment}"
@@ -40,8 +32,6 @@ resource "azurerm_network_interface" "main" {
   })
 }
 
-# Associate NIC with Load Balancer Backend Pool
-# Only in full-stack and failover modes
 resource "azurerm_network_interface_backend_address_pool_association" "main" {
   count                   = var.deployment_mode != "replica-only" ? 1 : 0
   network_interface_id    = azurerm_network_interface.main[0].id
@@ -49,7 +39,6 @@ resource "azurerm_network_interface_backend_address_pool_association" "main" {
   backend_address_pool_id = azurerm_lb_backend_address_pool.main[0].id
 }
 
-# SSH Key
 resource "azurerm_ssh_public_key" "main" {
   name                = "sshkey-${var.project_name}-${var.environment}"
   resource_group_name = azurerm_resource_group.main.name
@@ -61,8 +50,6 @@ resource "azurerm_ssh_public_key" "main" {
   })
 }
 
-# Linux Virtual Machine
-# Only created in full-stack and failover modes
 resource "azurerm_linux_virtual_machine" "main" {
   count               = var.deployment_mode != "replica-only" ? 1 : 0
   name                = "vm-${var.project_name}-${var.environment}"
